@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyStoreRequest;
+use App\Http\Requests\CompanyUpdateRequest;
 use App\Models\Company;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,11 @@ class CompanyController extends Controller
     public function index()
     {
         $data = Company::latest()->get();
+        $user = auth()->user();
+
+        if ($user->role == "admin") {
+            $data->where('compId', $user->compId);
+        }
 
         return view();
     }
@@ -58,15 +64,31 @@ class CompanyController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $data = Company::latest()->get();
+
+        if (! $data) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
+
+        return view();
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CompanyUpdateRequest $request, string $id)
     {
-        //
+        $data = Company::find($id);
+
+        if (! $data) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
+
+        $validatedData = $request->validated();
+
+        $data->update($validatedData);
+
+        return redirect()->route('');
     }
 
     /**
@@ -74,6 +96,14 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $data = Company::findOrFail($id);
+
+        if (! $data) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
+
+        $data->delete();
+
+        return redirect()->back()->with('success', 'Data berhasil dihapus');
     }
 }

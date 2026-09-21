@@ -16,7 +16,8 @@ class Company extends Model
         'name',
         'leaderId',
         'address',
-        'logo'
+        'logo',
+        'ticket_sequence'
     ];
 
     public function leader() {

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Room;
+use App\Models\Company;
 use Illuminate\Http\Request;
 
 class RoomController extends Controller
@@ -12,7 +14,14 @@ class RoomController extends Controller
      */
     public function index()
     {
-        //
+        $user = auth()->user();
+        $data = Room::latest()->get();
+
+        if (! $user->role == 'admin') {
+            $data->where('compId', $user->compId);
+        }
+
+        return view();
     }
 
     /**
@@ -20,7 +29,9 @@ class RoomController extends Controller
      */
     public function create()
     {
-        //
+        $company = Company::all();
+
+        return view();
     }
 
     /**

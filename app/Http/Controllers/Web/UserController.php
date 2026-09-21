@@ -17,7 +17,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $data = null;
+        $data = User::latest()->get();
         $user = auth()->user();
 
         if ($user->role == 'admin') {
@@ -26,7 +26,7 @@ class UserController extends Controller
             $data = User::latest()->get();
         }
 
-        return view();
+        return view('user.index', compact('data'));
     }
 
     /**
@@ -70,6 +70,10 @@ class UserController extends Controller
     public function show(string $id)
     {
         $data = User::find($id);
+
+        if (! $data) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        }
 
         return view();
     }
