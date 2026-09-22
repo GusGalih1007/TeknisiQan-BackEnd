@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginFormRequest;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Log;
 
 class AuthController extends Controller
 {
     public function loginPage()
     {
-        if (!Auth::check()) {
+        if (! Auth::user()) {
             return view('auth.login');
         }
 
@@ -21,21 +23,29 @@ class AuthController extends Controller
 
     public function login(LoginFormRequest $request)
     {
-        $validatedData = $request->validated();
-        
-        $account = User::where('email', $validatedData['email'])->first();
+        try {
+            $validatedData = $request->validated();
 
-        if (! $account) {
-            return redirect()->back()->with('no-account', 'No account found for this email, ask administrator for an account');
+            $account = User::where('email', $validatedData['email'])->first();
+
+            if (! $account) {
+                return redirect()->back()->with('no-account', 'No account found for this email, ask administrator for an account');
+            }
+
+            if (! Hash::check($validatedData['password'], $account->password)) {
+                return redirect()->back()->with('invalid-password', 'Password incorrect, please try again');
+            }
+
+            Auth::login($account);
+
+            // dd(Auth::check());
+
+            return redirect()->route('user.index');
+        } catch (Exception $e) {
+            Log::error($e);
+
+            return redirect()->back();
         }
-
-        if (! Hash::check($validatedData['password'], $account->password)) {
-            return redirect()->back()->with('invalid-password', 'Password incorrect, please try again');
-        }
-
-        auth()->guard('web')->login($account);
-
-        return redirect()->intended('/');
     }
 
     public function logout()

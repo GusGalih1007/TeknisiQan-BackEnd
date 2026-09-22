@@ -24,6 +24,6 @@ class Unit extends Model
     }
 
     public function room() {
-        return $this->belongsTo(User::class, 'roomId', 'roomId');
+        return $this->belongsTo(Room::class, 'roomId', 'roomId');
     }
 }

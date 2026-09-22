@@ -7,6 +7,7 @@ use App\Http\Requests\UnitStoreRequest;
 use App\Http\Requests\UnitUpdateRequest;
 use App\Models\Unit;
 use App\Models\Company;
+use App\Models\Room;
 use Illuminate\Http\Request;
 
 class UnitController extends Controller
@@ -31,8 +32,9 @@ class UnitController extends Controller
      */
     public function create()
     {
-        $company = Company::all();
-        
+        $user = auth()->user();
+        $room = Room::select(['roomId', 'roomName'])->where('compId', $user->compId)->get();
+
         return view();
     }
 
@@ -41,11 +43,10 @@ class UnitController extends Controller
      */
     public function store(UnitStoreRequest $request)
     {
-        $user = auth()->user();
         $validatedData = $request->validated();
         $unit = Unit::create($validatedData);
 
-        return redirect()-route('');
+        return redirect()-route('')->with('success', 'Data berhasil dibuat');
     }
 
     /**
@@ -68,6 +69,8 @@ class UnitController extends Controller
     public function edit(string $id)
     {
         $data = Unit::find($id);
+        $company = Company::select(['compId', 'name'])->latest()->get();
+        $room = Room::select(['roomId', 'roomName'])->latest()->get();
 
         return view();
     }

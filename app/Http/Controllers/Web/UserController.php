@@ -8,6 +8,7 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Log;
 
 class UserController extends Controller
@@ -18,7 +19,7 @@ class UserController extends Controller
     public function index()
     {
         $data = User::latest()->get();
-        $user = auth()->user();
+        $user = Auth::guard('web')->user();
 
         if ($user->role == 'admin') {
             $data = User::where('compId', $user->compId)->latest()->get();
@@ -98,6 +99,7 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, string $id)
     {
         $user = auth()->user();
+
         $data = User::find($id);
 
         if (! $data) {

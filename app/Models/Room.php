@@ -17,11 +17,13 @@ class Room extends Model
         'compId',
     ];
 
-    public function roomUnits() {
+    public function roomUnits()
+    {
         return $this->hasMany(Unit::class, 'roomId', 'roomId');
     }
 
-    public function company() {
-        return $this->belongsTo(Unit::class, 'compId', 'compId');
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'compId', 'compId');
     }
 }

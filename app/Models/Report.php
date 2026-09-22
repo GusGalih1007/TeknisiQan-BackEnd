@@ -28,4 +28,19 @@ class Report extends Model
             'reportDate' => 'datetime',
         ];
     }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unitId', 'unitId');
+    }
+
+    public function reportBy()
+    {
+        return $this->belongsTo(User::class, 'reportBy', 'UserId');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'compId', 'compId');
+    }
 }

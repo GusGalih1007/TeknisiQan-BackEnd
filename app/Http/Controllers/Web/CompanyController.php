@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyStoreRequest;
 use App\Http\Requests\CompanyUpdateRequest;
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CompanyController extends Controller
@@ -30,6 +31,7 @@ class CompanyController extends Controller
      */
     public function create()
     {
+        $user = User::latest()->select(['userId', 'name'])->get();
         return view();
     }
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RoleOption;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -18,7 +19,7 @@ class SuperAdminSeeder extends Seeder
             'email' => 'superadmin@teknisiqan.com',
             'phone' => '088299223303',
             'password' => bcrypt('1234567890'),
-            'role' => 'superadmin',
+            'role' => RoleOption::SuperAdmin->value,
             'photo' => null,
             'compId' => null
         ]);

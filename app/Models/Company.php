@@ -20,11 +20,18 @@ class Company extends Model
         'ticket_sequence'
     ];
 
-    public function leader() {
+    public function leader()
+    {
         return $this->belongsTo(User::class, 'leaderId', 'userId');
     }
 
-    public function companyUnits() {
+    public function companyUnits()
+    {
         return $this->hasMany(Unit::class, 'compId', 'compId');
+    }
+
+    public function companyRooms()
+    {
+        return $this->hasMany(Room::class, 'compId', 'compId');
     }
 }
