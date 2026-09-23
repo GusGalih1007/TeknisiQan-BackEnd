@@ -2,12 +2,19 @@
 
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\CompanyController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('reports.create');
 });
+
+// Halaman Pelaporan Kerusakan Publik (Tanpa Login)
+Route::get('/lapor', [ReportController::class, 'create'])->name('reports.create');
+Route::post('/lapor', [ReportController::class, 'store'])->name('reports.store');
+Route::get('/reports/create', [ReportController::class, 'create']);
 
 Route::prefix('auth')->group( function () {
     Route::get('login', [AuthController::class,'loginPage'])->name('login');
@@ -15,11 +22,11 @@ Route::prefix('auth')->group( function () {
     Route::get('logout', [AuthController::class,'logout'])->name('logout');
 });
 
+Route::get('/temp-dashboard', [DashboardController::class, 'index'])->name('temp.dashboard');
+
 Route::get('user', [UserController::class, 'index'])->name('user.index');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-Route::get('test-company', [CompanyController::class, 'index']);
 
 Route::get('/whoami', function () {
     return [

@@ -8,6 +8,7 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Log;
 
@@ -16,17 +17,18 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = User::latest()->get();
-        $user = Auth::guard('web')->user();
-
-        if ($user->role == 'admin') {
-            $data = User::where('compId', $user->compId)->latest()->get();
-        } else {
-            $data = User::latest()->get();
+        $query = User::with('company');
+        
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%");
         }
-
+        
+        $data = $query->paginate(10);
+        
         return view('user.index', compact('data'));
     }
 
