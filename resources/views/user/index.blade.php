@@ -1,184 +1,302 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Dashboard Klien - Teknisi Qan')
-@section('page-title', 'Dashboard Klien')
-@section('sidebar-active', 'dashboard')
+@section('title', 'Daftar Users - Teknisi Qan')
+@section('page-title', 'Daftar Users')
+@section('sidebar-active', 'users')
 
 @section('content')
-    <!-- Baris 1: Kartu Statistik (3 Kartu) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Kartu 1: Total Laporan -->
+    <!-- Baris 1: Widget Statistik -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Widget 1: Total Users Terdaftar -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Laporan</p>
-                    <p class="text-4xl font-extrabold text-primary">24</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Users Terdaftar</p>
+                    <p class="text-4xl font-extrabold text-primary">{{ $totalUsers }}</p>
                     <p class="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-                        <i class="bi bi-arrow-up-right text-emerald-500"></i>
-                        <span class="text-emerald-600 font-semibold">+3 laporan</span> bulan ini
+                        <i class="bi bi-people-fill text-primary"></i>
+                        <span class="text-gray-600">Pengguna aktif di sistem</span>
                     </p>
                 </div>
                 <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl">
-                    <i class="bi bi-file-earmark-text-fill"></i>
+                    <i class="bi bi-person-badge"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Kartu 2: Dalam Proses -->
+        <!-- Widget 2: Users Bulan Ini -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Dalam Proses</p>
-                    <p class="text-4xl font-extrabold text-tertiary">8</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Users Bulan Ini</p>
+                    <p class="text-4xl font-extrabold text-secondary">{{ $usersThisMonth }}</p>
                     <p class="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-                        <i class="bi bi-hourglass-split text-tertiary"></i>
-                        <span class="text-tertiary font-semibold">5 menunggu</span> verifikasi teknisi
+                        <i class="bi bi-calendar-plus text-secondary"></i>
+                        <span class="text-gray-600">Registrasi September 2026</span>
                     </p>
                 </div>
-                <div class="w-14 h-14 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary text-2xl">
-                    <i class="bi bi-gear-wide-connected"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kartu 3: Selesai -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Selesai Diperbaiki</p>
-                    <p class="text-4xl font-extrabold text-emerald-600">16</p>
-                    <p class="text-xs text-gray-500 mt-2 flex items-center gap-1 font-medium">
-                        <i class="bi bi-check-circle-fill text-emerald-500"></i>
-                        <span class="text-emerald-600 font-semibold">100%</span> tuntas bulan ini
-                    </p>
-                </div>
-                <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-2xl">
-                    <i class="bi bi-check-all"></i>
+                <div class="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary text-2xl">
+                    <i class="bi bi-graph-up"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Baris 2: Tombol Aksi & Tabel Riwayat Laporan -->
+    <!-- Baris 2: Datatable Users -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <!-- Tabel Header & CTA Button -->
-        <div class="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-100">
-            <div>
-                <h2 class="text-lg font-bold text-gray-800">Riwayat Laporan Terbaru</h2>
-                <p class="text-xs text-gray-400 mt-0.5">Daftar kerusakan barang yang telah dilaporkan ke tim teknisi</p>
+        <!-- Header & Search Section -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">Daftar Semua Users</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Data pengguna terdaftar dalam sistem Teknisi Qan</p>
+                </div>
+                
+                <a href="{{ route('users.create') }}" 
+                   class="bg-secondary text-primary font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-secondary-dark transition duration-200 flex items-center justify-center space-x-2 text-sm w-full sm:w-auto">
+                    <i class="bi bi-plus-lg text-base"></i>
+                    <span>Tambah User Baru</span>
+                </a>
             </div>
-            
-            <a href="{{ Route::has('reports.create') ? route('reports.create') : url('/lapor') }}" 
-               class="bg-secondary text-primary font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-secondary-dark transition duration-200 flex items-center justify-center space-x-2 text-sm">
-                <i class="bi bi-plus-lg text-base"></i>
-                <span>Buat Laporan Baru</span>
-            </a>
+
+            <!-- Search Bar -->
+            <div class="relative">
+                <form method="GET" action="{{ route('users.index') }}" class="flex gap-2">
+                    <div class="flex-1 relative">
+                        <input type="text" name="search" placeholder="Cari nama atau email user..." 
+                               value="{{ request('search') }}"
+                               class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition">
+                    </div>
+                    <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary-dark transition">
+                        Cari
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <!-- Tabel Riwayat -->
+        <!-- Datatable -->
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
                 <thead>
                     <tr class="bg-gray-50/80 text-gray-500 text-xs uppercase tracking-wider font-semibold">
-                        <th class="px-6 py-4">ID Laporan</th>
-                        <th class="px-6 py-4">Nama Barang</th>
-                        <th class="px-6 py-4">Tanggal Lapor</th>
-                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">No</th>
+                        <th class="px-6 py-4">Nama User</th>
+                        <th class="px-6 py-4">Email</th>
+                        <th class="px-6 py-4">Telepon</th>
+                        <th class="px-6 py-4">Perusahaan</th>
+                        <th class="px-6 py-4">Role</th>
+                        <th class="px-6 py-4">Tanggal Registrasi</th>
                         <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <!-- Baris 1: Menunggu -->
-                    <tr class="hover:bg-gray-50/60 transition">
-                        <td class="px-6 py-4 font-semibold text-primary">#LPR-2026-001</td>
-                        <td class="px-6 py-4 text-gray-800 font-medium">AC Central Ruang Meeting Utama</td>
-                        <td class="px-6 py-4 text-gray-500">22 Sep 2026</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 bg-secondary/30 text-amber-900 border border-secondary/50 px-3 py-1 rounded-full text-xs font-bold">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                Menunggu
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button type="button" class="text-primary hover:text-tertiary font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition">
-                                Detail
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Baris 2: Diproses -->
-                    <tr class="hover:bg-gray-50/60 transition">
-                        <td class="px-6 py-4 font-semibold text-primary">#LPR-2026-002</td>
-                        <td class="px-6 py-4 text-gray-800 font-medium">Printer LaserJet Lantai 2</td>
-                        <td class="px-6 py-4 text-gray-500">20 Sep 2026</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 bg-tertiary text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm shadow-tertiary/20">
-                                <i class="bi bi-gear-wide-connected text-[10px] animate-spin"></i>
-                                Diproses
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button type="button" class="text-primary hover:text-tertiary font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition">
-                                Detail
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Baris 3: Diproses -->
-                    <tr class="hover:bg-gray-50/60 transition">
-                        <td class="px-6 py-4 font-semibold text-primary">#LPR-2026-003</td>
-                        <td class="px-6 py-4 text-gray-800 font-medium">Lift Barang Gedung B</td>
-                        <td class="px-6 py-4 text-gray-500">19 Sep 2026</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 bg-tertiary text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm shadow-tertiary/20">
-                                <i class="bi bi-gear-wide-connected text-[10px] animate-spin"></i>
-                                Diproses
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button type="button" class="text-primary hover:text-tertiary font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition">
-                                Detail
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Baris 4: Selesai -->
-                    <tr class="hover:bg-gray-50/60 transition">
-                        <td class="px-6 py-4 font-semibold text-primary">#LPR-2026-004</td>
-                        <td class="px-6 py-4 text-gray-800 font-medium">Genset Cadangan 150 kVA</td>
-                        <td class="px-6 py-4 text-gray-500">15 Sep 2026</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm shadow-emerald-600/20">
-                                <i class="bi bi-check text-xs"></i>
-                                Selesai
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button type="button" class="text-primary hover:text-tertiary font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition">
-                                Detail
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Baris 5: Selesai -->
-                    <tr class="hover:bg-gray-50/60 transition">
-                        <td class="px-6 py-4 font-semibold text-primary">#LPR-2026-005</td>
-                        <td class="px-6 py-4 text-gray-800 font-medium">Kamera CCTV Lobby Depan</td>
-                        <td class="px-6 py-4 text-gray-500">12 Sep 2026</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm shadow-emerald-600/20">
-                                <i class="bi bi-check text-xs"></i>
-                                Selesai
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <button type="button" class="text-primary hover:text-tertiary font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition">
-                                Detail
-                            </button>
-                        </td>
-                    </tr>
+                    @forelse($data as $index => $user)
+                        <tr class="hover:bg-gray-50/60 transition">
+                            <td class="px-6 py-4 font-semibold text-gray-600">
+                                {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                                        @if($user->photo && file_exists(public_path('storage/' . $user->photo)))
+                                            <img src="{{ asset('storage/' . $user->photo) }}" alt="{{ $user->name }}" class="w-full h-full object-cover rounded-full">
+                                        @else
+                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=5003C0&color=fff&bold=true" 
+                                                alt="{{ $user->name }}" class="w-full h-full object-cover rounded-full">
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">{{ $user->name }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">{{ $user->email }}</td>
+                            <td class="px-6 py-4 text-gray-600">
+                                {{ $user->phone ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600">
+                                {{ $user->company?->name ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $roleColors = [
+                                        'admin' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'border' => 'border-blue-200'],
+                                        'technician' => ['bg' => 'bg-emerald-100', 'text' => 'text-emerald-800', 'border' => 'border-emerald-200'],
+                                        'client' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'border' => 'border-purple-200'],
+                                    ];
+                                    $roleConfig = $roleColors[$user->role->value] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'border' => 'border-gray-200'];
+                                @endphp
+                                <span class="inline-flex items-center {{ $roleConfig['bg'] }} {{ $roleConfig['text'] }} border {{ $roleConfig['border'] }} px-3 py-1 rounded-full text-xs font-bold">
+                                    {{ ucfirst($user->role->value) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 text-xs">
+                                {{ $user->created_at->format('d M Y') }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('users.edit', $user->userId) }}" 
+                                       class="text-primary hover:text-primary-dark font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition"
+                                       title="Edit User">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    @if(Auth::id() !== $user->userId)
+                                        <button type="button"
+                                                class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
+                                                title="Hapus User"
+                                                onclick="openDeleteModal('{{ $user->userId }}', '{{ $user->name }}', 'user')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    @else
+                                        <span class="text-gray-400 text-xs p-1.5 cursor-not-allowed" title="Tidak dapat menghapus akun sendiri">
+                                            <i class="bi bi-lock-fill"></i>
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <i class="bi bi-inbox text-3xl text-gray-300"></i>
+                                    <p class="text-gray-500 font-medium">Tidak ada data user ditemukan</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <div class="text-xs text-gray-500">
+                Menampilkan <span class="font-semibold text-gray-700">{{ $data->count() }}</span> dari <span class="font-semibold text-gray-700">{{ $data->total() }}</span> total users
+            </div>
+            <div class="flex gap-2">
+                {{ $data->links('pagination::simple-tailwind') }}
+            </div>
+        </div>
     </div>
 @endsection
+
+@push('scripts')
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full animate-scale-in">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Hapus Data</h3>
+                        <p class="text-xs text-gray-500">Tindakan ini tidak dapat dibatalkan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <p class="text-gray-600 text-sm mb-2">Anda akan menghapus:</p>
+                <p class="text-gray-800 font-semibold text-base mb-4"><span id="deleteItemName"></span></p>
+                <p class="text-gray-500 text-xs">Semua data yang terkait dengan item ini juga akan dihapus. Pastikan Anda benar-benar ingin menghapus.</p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 flex gap-3 bg-gray-50 rounded-b-2xl">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+                    Batal
+                </button>
+                <button type="button" onclick="confirmDelete()"
+                    class="flex-1 px-4 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2">
+                    <i class="bi bi-trash"></i>
+                    <span>Hapus</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .animate-scale-in {
+            animation: scaleIn 0.2s ease-out;
+        }
+    </style>
+
+    <script>
+        let deleteData = {
+            id: null,
+            type: null,
+            form: null
+        };
+
+        function openDeleteModal(id, name, type) {
+            deleteData.id = id;
+            deleteData.type = type;
+            
+            document.getElementById('deleteItemName').textContent = name;
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            deleteData = { id: null, type: null, form: null };
+        }
+
+        function confirmDelete() {
+            if (deleteData.type === 'user') {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/users/${deleteData.id}`;
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (csrfToken) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = '_token';
+                    input.value = csrfToken.getAttribute('content');
+                    form.appendChild(input);
+                }
+                
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+            closeDeleteModal();
+        }
+
+        // Close modal when pressing Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('deleteModal')?.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+@endpush

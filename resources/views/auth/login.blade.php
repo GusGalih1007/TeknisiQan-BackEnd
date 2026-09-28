@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Login Klien - Teknisi Qan')
+@section('title', 'Login klien - Teknisi Qan')
 
 @section('content')
     <!-- Header Form -->
@@ -100,7 +100,7 @@
 
         <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between pt-1">
-            <label class="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer select-none">
+            {{-- <label class="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer select-none">
                 <input 
                     type="checkbox" 
                     name="remember" 
@@ -109,7 +109,7 @@
                     class="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 accent-primary"
                 >
                 <span>Ingat Saya</span>
-            </label>
+            </label> --}}
 
             <a href="#" class="text-sm font-semibold text-tertiary hover:text-tertiary-light transition">
                 Lupa Password?

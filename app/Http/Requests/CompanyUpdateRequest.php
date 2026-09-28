@@ -12,7 +12,7 @@ class CompanyUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,7 @@ class CompanyUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:50',
-            'leaderId' => 'nullable|exists:user,userId',
+            'leaderId' => 'nullable|exists:users,userId',
             'address' => 'required|string',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:5024',
         ];

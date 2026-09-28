@@ -14,16 +14,24 @@ class RoomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $data = Room::latest()->get();
+        $query = Room::with('company')->latest();
 
-        if (! $user->role == 'admin') {
-            $data->where('compId', $user->compId);
+        // Superadmin dapat melihat semua, admin hanya miliknya
+        if ($user->role->value == 'admin') {
+            $query->where('compId', $user->compId);
         }
 
-        return view();
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where('roomName', 'like', "%$search%");
+        }
+
+        $data = $query->paginate(10);
+
+        return view('room.index', compact('data'));
     }
 
     /**
@@ -32,9 +40,18 @@ class RoomController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $company = Company::where('compId', $user->compId)->select(['compId', 'name'])->get();
+        
+        if ($user->role->value != 'admin' && $user->role->value != 'superadmin') {
+            return redirect()->route('rooms.index')->with('error', 'Hanya admin yang dapat membuat ruangan');
+        }
 
-        return view();
+        if ($user->role->value == 'superadmin') {
+            $companies = Company::select(['compId', 'name'])->get();
+        } else {
+            $companies = Company::where('compId', $user->compId)->select(['compId', 'name'])->get();
+        }
+
+        return view('room.create', compact('companies'));
     }
 
     /**
@@ -42,11 +59,26 @@ class RoomController extends Controller
      */
     public function store(RoomStoreRequest $request)
     {
-        $validatedData = $request->validated();
+        try {
+            $user = auth()->user();
 
-        Room::create($validatedData);
+            if ($user->role->value != 'admin' && $user->role->value != 'superadmin') {
+                return redirect()->route('rooms.index')->with('error', 'Hanya admin yang dapat membuat ruangan');
+            }
 
-        return redirect()->route('')->with('success', 'Data berhasil dibuat');
+            $validatedData = $request->validated();
+            
+            // Jika superadmin, gunakan compId dari request, jika admin gunakan miliknya
+            if ($user->role->value == 'admin') {
+                $validatedData['compId'] = $user->compId;
+            }
+
+            Room::create($validatedData);
+
+            return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -71,13 +103,21 @@ class RoomController extends Controller
         $user = auth()->user();
         $data = Room::find($id);
 
-        if(! $data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
+        if (! $data) {
+            return redirect()->route('rooms.index')->with('error', 'Data tidak ditemukan');
         }
 
-        $company = Company::where('compId', $user->compId)->select(['compId', 'name'])->get();
+        if ($user->role->value != 'admin' && $user->role->value != 'superadmin') {
+            return redirect()->route('rooms.index')->with('error', 'Hanya admin yang dapat mengedit ruangan');
+        }
 
-        return view();
+        if ($user->role->value == 'superadmin') {
+            $companies = Company::select(['compId', 'name'])->get();
+        } else {
+            $companies = Company::where('compId', $user->compId)->select(['compId', 'name'])->get();
+        }
+
+        return view('room.edit', compact('data', 'companies'));
     }
 
     /**
@@ -85,16 +125,31 @@ class RoomController extends Controller
      */
     public function update(RoomUpdateRequest $request, string $id)
     {
-        $data = Room::find($id);
+        try {
+            $user = auth()->user();
+            $data = Room::find($id);
 
-        if (! $data) {
-            return redirect()->route('')->with('error', 'Data tidak ditemukan');
+            if (! $data) {
+                return redirect()->route('rooms.index')->with('error', 'Data tidak ditemukan');
+            }
+
+            if ($user->role->value != 'admin' && $user->role->value != 'superadmin') {
+                return redirect()->route('rooms.index')->with('error', 'Hanya admin yang dapat mengedit ruangan');
+            }
+
+            $validatedData = $request->validated();
+            
+            // Jika admin, pastikan compId tidak berubah
+            if ($user->role->value == 'admin') {
+                $validatedData['compId'] = $data->compId;
+            }
+
+            $data->update($validatedData);
+
+            return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil diperbarui');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $validatedData = $request->validated();
-        $data->update($validatedData);
-
-        return redirect()->route('')->with('success', 'Data berhasil diubah');
     }
 
     /**
@@ -102,14 +157,23 @@ class RoomController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Room::find($id);
+        try {
+            $user = auth()->user();
+            $data = Room::find($id);
 
-        if (! $data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
+            if (! $data) {
+                return redirect()->back()->with('error', 'Data tidak ditemukan');
+            }
+
+            if ($user->role->value != 'admin' && $user->role->value != 'superadmin') {
+                return redirect()->route('rooms.index')->with('error', 'Hanya admin yang dapat menghapus ruangan');
+            }
+
+            $data->delete();
+
+            return redirect()->back()->with('success', 'Ruangan berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $data->delete();
-
-        return redirect()->route('')->with('success', 'Data berhasil dihapus');
     }
 }

@@ -36,7 +36,7 @@ class AuthController extends Controller
                 return redirect()->back()->with('invalid-password', 'Password incorrect, please try again');
             }
 
-            Auth::login($account);
+            Auth::login($account, true);
 
             // dd(Auth::check());
 

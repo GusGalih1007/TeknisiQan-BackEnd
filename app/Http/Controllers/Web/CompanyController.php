@@ -14,16 +14,24 @@ class CompanyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = Company::latest()->get();
         $user = auth()->user();
+        $query = Company::with('leader')->latest();
 
-        if ($user->role == "admin") {
-            $data->where('compId', $user->compId);
+        if ($user->role->value == "admin") {
+            $query->where('compId', $user->compId);
         }
 
-        return view();
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where('name', 'like', "%$search%")
+                  ->orWhere('address', 'like', "%$search%");
+        }
+
+        $data = $query->paginate(10);
+
+        return view('company.index', compact('data'));
     }
 
     /**
@@ -31,8 +39,8 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        $user = User::latest()->select(['userId', 'name'])->get();
-        return view();
+        $leaders = User::where('role', 'admin')->select(['userId', 'name', 'email'])->get();
+        return view('company.create', compact('leaders'));
     }
 
     /**
@@ -40,11 +48,23 @@ class CompanyController extends Controller
      */
     public function store(CompanyStoreRequest $request)
     {
-        $validatedData = $request->validated();
+        try {
+            $validatedData = $request->validated();
 
-        $company = Company::create($validatedData);
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $file = $request->file('logo');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('logos', $filename, 'public');
+                $validatedData['logo'] = 'logos/' . $filename;
+            }
 
-        return redirect()->route('');
+            Company::create($validatedData);
+
+            return redirect()->route('companies.index')->with('success', 'Instansi berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -66,13 +86,15 @@ class CompanyController extends Controller
      */
     public function edit(string $id)
     {
-        $data = Company::latest()->get();
+        $data = Company::find($id);
 
         if (! $data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
+            return redirect()->route('companies.index')->with('error', 'Data tidak ditemukan');
         }
 
-        return view();
+        $leaders = User::where('role', 'admin')->select(['userId', 'name', 'email'])->get();
+
+        return view('company.edit', compact('data', 'leaders'));
     }
 
     /**
@@ -80,17 +102,34 @@ class CompanyController extends Controller
      */
     public function update(CompanyUpdateRequest $request, string $id)
     {
-        $data = Company::find($id);
+        try {
+            $data = Company::find($id);
 
-        if (! $data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
+            if (! $data) {
+                return redirect()->route('companies.index')->with('error', 'Data tidak ditemukan');
+            }
+
+            $validatedData = $request->validated();
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                // Delete old logo if exists
+                if ($data->logo && file_exists(public_path('storage/' . $data->logo))) {
+                    unlink(public_path('storage/' . $data->logo));
+                }
+
+                $file = $request->file('logo');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('logos', $filename, 'public');
+                $validatedData['logo'] = 'logos/' . $filename;
+            }
+
+            $data->update($validatedData);
+
+            return redirect()->route('companies.index')->with('success', 'Instansi berhasil diperbarui');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $validatedData = $request->validated();
-
-        $data->update($validatedData);
-
-        return redirect()->route('');
     }
 
     /**
@@ -98,14 +137,23 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Company::findOrFail($id);
+        try {
+            $data = Company::find($id);
 
-        if (! $data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan');
+            if (! $data) {
+                return redirect()->back()->with('error', 'Data tidak ditemukan');
+            }
+
+            // Delete logo if exists
+            if ($data->logo && file_exists(public_path('storage/' . $data->logo))) {
+                unlink(public_path('storage/' . $data->logo));
+            }
+
+            $data->delete();
+
+            return redirect()->back()->with('success', 'Instansi berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $data->delete();
-
-        return redirect()->back()->with('success', 'Data berhasil dihapus');
     }
 }

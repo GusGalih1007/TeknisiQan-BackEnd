@@ -12,7 +12,7 @@ class RoomUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,17 @@ class RoomUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'roomName' => 'required|string|max:20',
+            'compId' => 'nullable|exists:companies,compId'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'roomName.required' => 'Tolong isi nama ruangan',
+            'roomName.max' => 'Maksimal karakter 20',
+            'compId.exists' => 'Instansi tidak ditemukan'
         ];
     }
 }

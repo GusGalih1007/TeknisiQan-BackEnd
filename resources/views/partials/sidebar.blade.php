@@ -35,12 +35,12 @@
         </a>
 
         <!-- 2. Buat Laporan -->
-        <a href="{{ Route::has('reports.create') ? route('reports.create') : url('/lapor') }}"
+        {{-- <a href="{{ Route::has('reports.create') ? route('reports.create') : url('/lapor') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'create-report' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
             <i
                 class="bi bi-plus-circle-fill text-lg {{ $activeMenu === 'create-report' ? 'text-primary' : 'text-secondary' }}"></i>
             <span>Buat Laporan</span>
-        </a>
+        </a> --}}
 
         <!-- 3. Riwayat Laporan -->
         <a href="#"
@@ -50,12 +50,27 @@
             <span>Riwayat Laporan</span>
         </a>
 
-        <!-- 4. Profil Saya -->
-        <a href="#"
-            class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'profile' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
+        <!-- 4. Daftar User -->
+        <a href="{{ Route::has('users.index') ? route('users.index') : url('/users') }}"
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'users' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
             <i
-                class="bi bi-person-badge text-lg {{ $activeMenu === 'profile' ? 'text-primary' : 'text-purple-200' }}"></i>
-            <span>Profil Klien</span>
+                class="bi bi-people text-lg {{ $activeMenu === 'users' ? 'text-primary' : 'text-purple-200' }}"></i>
+            <span>Daftar User</span>
+        </a>
+
+
+        <a href="{{ Route::has('companies.index') ? route('companies.index') : url('/companies') }}"
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'companies' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
+            <i
+                class="bi bi-building text-lg {{ $activeMenu === 'companies' ? 'text-primary' : 'text-purple-200' }}"></i>
+            <span>Daftar Instansi</span>
+        </a>
+
+        <a href="{{ Route::has('rooms.index') ? route('rooms.index') : url('/rooms') }}"
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'rooms' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
+            <i
+                class="bi bi-door-closed text-lg {{ $activeMenu === 'rooms' ? 'text-primary' : 'text-purple-200' }}"></i>
+            <span>Daftar Ruangan</span>
         </a>
     </nav>
 
