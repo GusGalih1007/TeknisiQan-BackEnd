@@ -66,7 +66,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs font-semibold text-gray-600 mb-1">Total Perangkat</p>
-                                    <p class="text-2xl font-bold text-primary">{{ $room->roomUnits_count ?? 0 }}</p>
+                                    <p class="text-2xl font-bold text-primary">{{ $room->roomUnits->count() ?? 0 }}</p>
                                 </div>
                                 <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 text-lg">
                                     <i class="bi bi-boxes"></i>

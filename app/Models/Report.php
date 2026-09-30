@@ -24,6 +24,7 @@ class Report extends Model
 
     protected function casts(): array {
         return [
+            'reportBy' => 'json',
             'photo' => 'json',
             'reportDate' => 'datetime',
         ];
@@ -32,11 +33,6 @@ class Report extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unitId', 'unitId');
-    }
-
-    public function reportBy()
-    {
-        return $this->belongsTo(User::class, 'reportBy', 'UserId');
     }
 
     public function company()

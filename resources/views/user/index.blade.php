@@ -81,8 +81,6 @@
                     <tr class="bg-gray-50/80 text-gray-500 text-xs uppercase tracking-wider font-semibold">
                         <th class="px-6 py-4">No</th>
                         <th class="px-6 py-4">Nama User</th>
-                        <th class="px-6 py-4">Email</th>
-                        <th class="px-6 py-4">Telepon</th>
                         <th class="px-6 py-4">Perusahaan</th>
                         <th class="px-6 py-4">Role</th>
                         <th class="px-6 py-4">Tanggal Registrasi</th>
@@ -96,8 +94,8 @@
                                 {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
                             </td>
                             <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                                <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="openUserDetailModal('{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->phone ?? '-' }}', '{{ $user->userId }}', '{{ $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=5003C0&color=fff&bold=true' }}')">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
                                         @if($user->photo && file_exists(public_path('storage/' . $user->photo)))
                                             <img src="{{ asset('storage/' . $user->photo) }}" alt="{{ $user->name }}" class="w-full h-full object-cover rounded-full">
                                         @else
@@ -106,13 +104,9 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-gray-800">{{ $user->name }}</p>
+                                        <p class="font-semibold text-gray-800 hover:underline">{{ $user->name }}</p>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-600">{{ $user->email }}</td>
-                            <td class="px-6 py-4 text-gray-600">
-                                {{ $user->phone ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-gray-600">
                                 {{ $user->company?->name ?? '-' }}
@@ -135,8 +129,14 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    <button type="button" 
+                                            class="text-primary hover:text-primary-dark font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition"
+                                            title="Lihat Detail"
+                                            onclick="openUserDetailModal('{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->phone ?? '-' }}', '{{ $user->userId }}', '{{ $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=5003C0&color=fff&bold=true' }}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                     <a href="{{ route('users.edit', $user->userId) }}" 
-                                       class="text-primary hover:text-primary-dark font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition"
+                                       class="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
                                        title="Edit User">
                                         <i class="bi bi-pencil"></i>
                                     </a>
@@ -144,7 +144,7 @@
                                         <button type="button"
                                                 class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
                                                 title="Hapus User"
-                                                onclick="openDeleteModal('{{ $user->userId }}', '{{ $user->name }}', 'user')">
+                                                onclick="openDeleteModal('{{ $user->userId }}', '{{ addslashes($user->name) }}', 'user')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     @else
@@ -157,7 +157,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-8 text-center">
+                            <td colspan="6" class="px-6 py-8 text-center">
                                 <div class="flex flex-col items-center justify-center gap-3">
                                     <i class="bi bi-inbox text-3xl text-gray-300"></i>
                                     <p class="text-gray-500 font-medium">Tidak ada data user ditemukan</p>
@@ -182,6 +182,63 @@
 @endsection
 
 @push('scripts')
+    <!-- User Detail Modal -->
+    <div id="userDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-lg max-w-md w-full animate-scale-in max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 sticky top-0 bg-white">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800">Detail User</h3>
+                    <button type="button" onclick="closeUserDetailModal()"
+                        class="text-gray-400 hover:text-gray-600 text-xl transition">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6">
+                <!-- Photo Section -->
+                <div class="text-center">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-4xl font-bold overflow-hidden mx-auto mb-4">
+                        <img id="userPhoto" src="" alt="User Photo" class="w-full h-full object-cover">
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-800" id="userDetailName"></h4>
+                </div>
+
+                <!-- Info Sections -->
+                <div class="space-y-4">
+                    <!-- Email -->
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Email</p>
+                        <p class="text-sm text-gray-700 break-all" id="userDetailEmail"></p>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Telepon</p>
+                        <p class="text-sm text-gray-700" id="userDetailPhone"></p>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-200"></div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-4">
+                        <a id="editUserBtn" href="#" 
+                           class="flex-1 text-center bg-blue-100 text-blue-800 hover:bg-blue-200 font-semibold py-2.5 rounded-lg transition">
+                            <i class="bi bi-pencil mr-2"></i>Edit
+                        </a>
+                        <button type="button" onclick="closeUserDetailModal()"
+                            class="flex-1 bg-gray-100 text-gray-800 hover:bg-gray-200 font-semibold py-2.5 rounded-lg transition">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full animate-scale-in">
@@ -243,6 +300,29 @@
             form: null
         };
 
+        function openUserDetailModal(name, email, phone, userId, photoUrl) {
+            document.getElementById('userDetailName').textContent = name;
+            document.getElementById('userDetailEmail').textContent = email;
+            document.getElementById('userDetailPhone').textContent = phone;
+            document.getElementById('editUserBtn').href = `/users/${userId}/edit`;
+            
+            // Set photo dengan URL yang dikirim dari server
+            const photoImg = document.getElementById('userPhoto');
+            photoImg.src = photoUrl;
+            photoImg.onerror = function() {
+                // Fallback jika foto gagal
+                this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5003C0&color=fff&bold=true`;
+            };
+            
+            document.getElementById('userDetailModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeUserDetailModal() {
+            document.getElementById('userDetailModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
         function openDeleteModal(id, name, type) {
             deleteData.id = id;
             deleteData.type = type;
@@ -285,14 +365,21 @@
             closeDeleteModal();
         }
 
-        // Close modal when pressing Escape
+        // Close modals when pressing Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
+                closeUserDetailModal();
                 closeDeleteModal();
             }
         });
 
-        // Close modal when clicking outside
+        // Close modals when clicking outside
+        document.getElementById('userDetailModal')?.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeUserDetailModal();
+            }
+        });
+
         document.getElementById('deleteModal')?.addEventListener('click', function(event) {
             if (event.target === this) {
                 closeDeleteModal();

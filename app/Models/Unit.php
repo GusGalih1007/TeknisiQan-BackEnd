@@ -17,6 +17,7 @@ class Unit extends Model
         'unitName',
         'compId',
         'roomId',
+        'qrCode',
     ];
 
     public function company() {

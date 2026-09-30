@@ -96,7 +96,7 @@
                 </div>
 
                 <div class="p-3 border-t border-gray-200">
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="GET" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
                             class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50/50 rounded-lg transition font-medium">

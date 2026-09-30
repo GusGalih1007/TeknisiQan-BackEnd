@@ -3,7 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\NonUserReportStoreRequest;
+use App\Models\Company;
+use App\Models\Report;
+use App\Models\Unit;
+use App\Services\TicketNumberGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -20,15 +26,81 @@ class ReportController extends Controller
      */
     public function create()
     {
-        return view('reports.create');
+        $companies = Company::select(['compId', 'name'])->get();
+        return view('non-user.create', compact('companies'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(NonUserReportStoreRequest $request)
     {
-        //
+        try {
+            $validatedData = $request->validated();
+
+            // Get unit and company data
+            $unit = Unit::find($validatedData['unitId']);
+            $company = Company::find($validatedData['compId']);
+
+            if (!$unit || !$company || $unit->compId !== $company->compId) {
+                return redirect()->back()->with('error', 'Unit atau perusahaan tidak ditemukan');
+            }
+
+            // Generate ticket number
+            $ticketGeneratorService = new TicketNumberGeneratorService();
+            $ticketNumber = $ticketGeneratorService->generate($company);
+
+            // Handle multiple photo uploads
+            $photoPaths = [];
+            if ($request->hasFile('photos')) {
+                try {
+                    foreach ($request->file('photos') as $photo) {
+                        $path = $photo->store('reports/' . date('Y/m/d'), 'public');
+                        $photoPaths[] = $path;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Photo upload error: ' . $e->getMessage());
+                    // Continue without photos if upload fails
+                }
+            }
+
+            // Create reporter metadata
+            $reporterMetadata = [
+                'name' => $validatedData['reportByName'],
+                'phone' => $validatedData['contact_phone'],
+                'email' => $validatedData['contact_email'] ?? null,
+                'department' => $validatedData['department'] ?? null,
+            ];
+
+            // Create report
+            $report = Report::create([
+                'ticketNumber' => $ticketNumber,
+                'unitId' => $validatedData['unitId'],
+                'compId' => $validatedData['compId'],
+                'problem' => $validatedData['problem'],
+                'reportBy' => $reporterMetadata,
+                'reportDate' => $validatedData['reportDate'],
+                'photo' => $photoPaths ?: null,
+            ]);
+
+            // Store additional info in session for confirmation
+            session()->put('last_report', [
+                'ticketNumber' => $ticketNumber,
+                'unitName' => $unit->unitName,
+                'companyName' => $company->name,
+                'reporterName' => $validatedData['reportByName'],
+                'reporterPhone' => $validatedData['contact_phone'],
+            ]);
+
+            return redirect()->route('non-user-reports.create')
+                ->with('success', 'Laporan kerusakan berhasil dikirim dengan nomor tiket: ' . $ticketNumber);
+
+        } catch (\Exception $e) {
+            Log::error('Report creation error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menyimpan laporan: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**

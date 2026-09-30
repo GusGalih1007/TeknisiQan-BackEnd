@@ -22,6 +22,7 @@
     },
     "dependencies": {
         "@tailwindcss/forms": "^0.5.11",
-        "@tailwindcss/typography": "^0.5.20"
+        "@tailwindcss/typography": "^0.5.20",
+        "html5-qrcode": "^2.3.8"
     }
 }

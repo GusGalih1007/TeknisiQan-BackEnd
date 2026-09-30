@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reports', function (Blueprint $table) {
-            $table->string('reportByName', 60)->nullable()->after('reportBy');
+        Schema::table('units', function (Blueprint $table) {
+            // unitNumber sudah ada, jadi pastikan unique per room
+            $table->unique(['unitNumber', 'roomId'])->after('unitNumber');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reports', function (Blueprint $table) {
-            $table->dropColumn('reportByName');
+        Schema::table('units', function (Blueprint $table) {
+            $table->dropUnique(['unitNumber', 'roomId']);
         });
     }
 };

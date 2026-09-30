@@ -72,6 +72,13 @@
                 class="bi bi-door-closed text-lg {{ $activeMenu === 'rooms' ? 'text-primary' : 'text-purple-200' }}"></i>
             <span>Daftar Ruangan</span>
         </a>
+
+        <a href="{{ Route::has('units.index') ? route('units.index') : url('/units') }}"
+            class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'units' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
+            <i
+                class="bi bi-collection text-lg {{ $activeMenu === 'units' ? 'text-primary' : 'text-purple-200' }}"></i>
+            <span>Daftar Unit</span>
+        </a>
     </nav>
 
     <!-- Sidebar Footer / Logout -->

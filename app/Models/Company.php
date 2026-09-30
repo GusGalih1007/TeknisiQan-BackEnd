@@ -25,6 +25,11 @@ class Company extends Model
         return $this->belongsTo(User::class, 'leaderId', 'userId');
     }
 
+    public function companyUsers()
+    {
+        return $this->hasMany(User::class, 'compId', 'compId');
+    }
+
     public function companyUnits()
     {
         return $this->hasMany(Unit::class, 'compId', 'compId');

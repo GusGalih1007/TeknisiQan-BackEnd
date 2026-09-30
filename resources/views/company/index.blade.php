@@ -55,41 +55,60 @@
                     </div>
 
                     <!-- Content Section -->
-                    <div class="p-5">
+                    <div class="p-5 flex flex-col h-full">
                         <!-- Company Name -->
-                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{{ $company->name }}</h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">{{ $company->name }}</h3>
 
                         <!-- Address -->
-                        <p class="text-xs text-gray-500 mb-4 line-clamp-2 flex items-start gap-2">
-                            <i class="bi bi-geo-alt-fill text-primary mt-0.5 flex-shrink-0"></i>
-                            <span>{{ $company->address }}</span>
-                        </p>
+                        <button type="button" onclick="openDetailModal('{{ $company->name }}', '{{ $company->address }}')"
+                            class="text-xs text-gray-500 mb-3 flex items-center gap-2 hover:text-primary transition cursor-pointer group w-full">
+                            <i class="bi bi-geo-alt-fill text-primary flex-shrink-0"></i>
+                            <span class="truncate group-hover:underline">{{ $company->address }}</span>
+                        </button>
 
                         <!-- Leader Info -->
-                        @if($company->leader)
-                            <div class="mb-4 pb-4 border-b border-gray-100">
-                                <p class="text-xs font-semibold text-gray-600 mb-2">Pemimpin Instansi:</p>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-xs font-bold">
+                        <div class="mb-4 pb-4 border-b border-gray-100">
+                            <p class="text-xs font-semibold text-gray-600 mb-2">Pemimpin Instansi:</p>
+                            @if($company->leader)
+                                <button type="button" onclick="openDetailModal('{{ addslashes($company->leader->name) }}', '{{ addslashes($company->leader->email) }}')"
+                                    class="flex items-center gap-2 hover:bg-gray-50 p-1 rounded transition cursor-pointer w-full">
+                                    @if($company->leader->photo)
+                                    <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
+                                        <img src="{{ asset('storage/' . $company->leader->photo) }}" alt="{{ $company->leader->name }}"
+                                            class="w-full h-full object-cover rounded-full">
+                                    </div>
+                                    @else
+                                    <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
                                         {{ strtoupper(substr($company->leader->name, 0, 1)) }}
                                     </div>
+                                    @endif
+                                    <div class="min-w-0 text-left">
+                                        <p class="text-xs font-semibold text-gray-800 truncate hover:underline">{{ $company->leader->name }}</p>
+                                        <p class="text-xs text-gray-500 truncate hover:underline">{{ $company->leader->email }}</p>
+                                    </div>
+                                </button>
+                            @else
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
+                                        <i class="bi bi-person-slash text-xs"></i>
+                                    </div>
                                     <div>
-                                        <p class="text-xs font-semibold text-gray-800">{{ $company->leader->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $company->leader->email }}</p>
+                                        <p class="text-xs font-semibold text-gray-500">Belum ditentukan</p>
+                                        <p class="text-xs text-gray-400">—</p>
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
 
                         <!-- Stats -->
                         <div class="grid grid-cols-2 gap-3 mb-4">
                             <div class="bg-blue-50 rounded-lg p-2">
                                 <p class="text-xs text-blue-600 font-semibold">Total Users</p>
-                                <p class="text-lg font-bold text-blue-800">{{ $company->users_count ?? 0 }}</p>
+                                <p class="text-lg font-bold text-blue-800">{{ $company->companyUsers->count() ?? 0 }}</p>
                             </div>
                             <div class="bg-emerald-50 rounded-lg p-2">
                                 <p class="text-xs text-emerald-600 font-semibold">Ruangan</p>
-                                <p class="text-lg font-bold text-emerald-800">{{ $company->companyRooms_count ?? 0 }}</p>
+                                <p class="text-lg font-bold text-emerald-800">{{ $company->companyRooms->count() ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -140,6 +159,36 @@
 @endsection
 
 @push('scripts')
+    <!-- Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-lg max-w-md w-full animate-scale-in">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800" id="detailTitle">Detail</h3>
+                    <button type="button" onclick="closeDetailModal()"
+                        class="text-gray-400 hover:text-gray-600 text-xl">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <p class="text-gray-600 text-sm mb-2">Konten Lengkap:</p>
+                <p class="text-gray-800 font-semibold text-base break-words whitespace-pre-wrap" id="detailContent"></p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 flex gap-3 bg-gray-50 rounded-b-2xl">
+                <button type="button" onclick="closeDetailModal()"
+                    class="flex-1 px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full animate-scale-in">
@@ -201,6 +250,18 @@
             form: null
         };
 
+        function openDetailModal(title, content) {
+            document.getElementById('detailTitle').textContent = title;
+            document.getElementById('detailContent').textContent = content;
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
         function openDeleteModal(id, name, type) {
             deleteData.id = id;
             deleteData.type = type;
@@ -243,14 +304,21 @@
             closeDeleteModal();
         }
 
-        // Close modal when pressing Escape
+        // Close modals when pressing Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
+                closeDetailModal();
                 closeDeleteModal();
             }
         });
 
-        // Close modal when clicking outside
+        // Close modals when clicking outside
+        document.getElementById('detailModal')?.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDetailModal();
+            }
+        });
+
         document.getElementById('deleteModal')?.addEventListener('click', function(event) {
             if (event.target === this) {
                 closeDeleteModal();
