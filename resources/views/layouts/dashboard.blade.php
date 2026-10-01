@@ -65,6 +65,7 @@
         <!-- Main Scrollable Body Content -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-8 bg-surface flex flex-col justify-between">
             <div class="flex-grow">
+                @include('components.alert')
                 @yield('content')
             </div>
 

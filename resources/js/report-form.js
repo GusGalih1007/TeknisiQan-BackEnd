@@ -2,6 +2,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 
 let html5QrcodeScanner = null;
 let isScannerRunning = false;
+const selectedPhotos = [];
 
 // Toggle between Scanner and Manual modes
 function toggleMode(mode) {
@@ -9,24 +10,27 @@ function toggleMode(mode) {
     const manualView = document.getElementById('manual-view');
     const modeScanner = document.getElementById('mode-scanner');
     const modeManual = document.getElementById('mode-manual');
+    const toggleBackground = document.getElementById('toggle-bg');
 
     if (mode === 'scanner') {
         scannerView.classList.remove('hidden');
         manualView.classList.add('hidden');
-        modeScanner.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-        modeScanner.classList.add('bg-primary', 'text-white');
-        modeManual.classList.remove('bg-primary', 'text-white');
-        modeManual.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        toggleBackground.style.transform = 'translateX(0)';
+        modeScanner.classList.remove('text-white');
+        modeScanner.classList.add('text-primary');
+        modeManual.classList.remove('text-primary');
+        modeManual.classList.add('text-white');
         
         // Start scanner when switching to scanner mode
         setTimeout(() => startScanner(), 100);
     } else {
         manualView.classList.remove('hidden');
         scannerView.classList.add('hidden');
-        modeManual.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-        modeManual.classList.add('bg-primary', 'text-white');
-        modeScanner.classList.remove('bg-primary', 'text-white');
-        modeScanner.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        toggleBackground.style.transform = 'translateX(100%)';
+        modeManual.classList.remove('text-white');
+        modeManual.classList.add('text-primary');
+        modeScanner.classList.remove('text-primary');
+        modeScanner.classList.add('text-white');
         
         // Stop scanner when switching to manual mode
         if (isScannerRunning) {
@@ -180,40 +184,71 @@ function selectUnit(unitId) {
         });
 }
 
-// File upload handling - display selected files with thumbnails
-function handlePhotoInput(input, index) {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Validate file size (5MB max)
+// File upload handling - keep files compact and display their thumbnails
+function validatePhoto(file) {
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
         alert(`File terlalu besar. Maksimal 5MB. File Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-        input.value = '';
-        return;
+        return false;
     }
 
-    // Validate file type
     if (!['image/png', 'image/jpg', 'image/jpeg', 'image/webp'].includes(file.type)) {
         alert('Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.');
-        input.value = '';
-        return;
+        return false;
     }
 
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    return true;
+}
+
+function syncPhotoInputs() {
+    for (let index = 1; index <= 5; index++) {
+        const input = document.getElementById(`photo-${index}`);
         const photoDisplay = document.querySelector(`.photo-display-${index}`);
         const fileInfo = document.getElementById(`file-info-${index}`);
         const photoPreview = document.getElementById(`photo-preview-${index}`);
-        const fileName = document.getElementById(`file-name-${index}`);
+        const removeButton = document.getElementById(`remove-photo-${index}`);
+        const file = selectedPhotos[index - 1];
+        const transfer = new DataTransfer();
 
-        photoDisplay.classList.add('hidden');
-        fileInfo.classList.remove('hidden');
-        photoPreview.src = e.target.result;
-        fileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-    };
-    reader.readAsDataURL(file);
+        if (file) {
+            transfer.items.add(file);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                photoPreview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            photoDisplay.classList.add('hidden');
+            fileInfo.classList.remove('hidden');
+            removeButton.classList.remove('hidden');
+            removeButton.classList.add('flex');
+        } else {
+            photoPreview.removeAttribute('src');
+            photoDisplay.classList.remove('hidden');
+            fileInfo.classList.add('hidden');
+            removeButton.classList.add('hidden');
+            removeButton.classList.remove('flex');
+        }
+
+        input.files = transfer.files;
+    }
+}
+
+function addPhoto(file, index) {
+    if (!file || !validatePhoto(file)) {
+        syncPhotoInputs();
+        return;
+    }
+
+    selectedPhotos[index - 1] = file;
+    const compactedPhotos = selectedPhotos.filter(Boolean).slice(0, 5);
+    selectedPhotos.splice(0, selectedPhotos.length, ...compactedPhotos);
+    syncPhotoInputs();
+}
+
+function removePhoto(index) {
+    selectedPhotos.splice(index - 1, 1);
+    syncPhotoInputs();
 }
 
 function preventDefaults(e) {
@@ -242,13 +277,7 @@ function setupEventListeners() {
             e.preventDefault();
             e.stopPropagation();
             toggleMode('scanner');
-        }, true);
-        
-        modeScanner.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMode('scanner');
-        }, true);
+        });
     }
 
     if (modeManual) {
@@ -256,13 +285,7 @@ function setupEventListeners() {
             e.preventDefault();
             e.stopPropagation();
             toggleMode('manual');
-        }, true);
-        
-        modeManual.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMode('manual');
-        }, true);
+        });
     }
 
     // Photo input handlers
@@ -270,7 +293,14 @@ function setupEventListeners() {
         const photoInput = document.getElementById(`photo-${i}`);
         if (photoInput) {
             photoInput.addEventListener('change', function () {
-                handlePhotoInput(this, i);
+                addPhoto(this.files[0], i);
+            });
+
+            const removeButton = document.getElementById(`remove-photo-${i}`);
+            removeButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                removePhoto(i);
             });
 
             // Drag and drop
@@ -293,10 +323,7 @@ function setupEventListeners() {
                 });
 
                 dropZone.addEventListener('drop', (e) => {
-                    const files = e.dataTransfer.files;
-                    photoInput.files = files;
-                    const event = new Event('change', { bubbles: true });
-                    photoInput.dispatchEvent(event);
+                    addPhoto(e.dataTransfer.files[0], i);
                 }, { passive: false });
             }
         }

@@ -5,30 +5,41 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UnitStoreRequest;
 use App\Http\Requests\UnitUpdateRequest;
-use App\Models\Unit;
-use App\Models\Company;
 use App\Models\Room;
+use App\Models\Unit;
 use App\Services\UnitNumberGeneratorService;
 use App\Services\UnitQrCodeService;
-use App\Services\UnitEmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class UnitController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $query = Unit::with('company', 'room')->latest();
 
-        // Filter berdasarkan role
-        if ($user->role->value === 'admin') {
+        if ($user->role->value !== 'superadmin') {
             $query->where('compId', $user->compId);
         }
 
-        $data = $query->paginate(10);
+        $query->when($request->filled('search'), function ($query) use ($request) {
+            $search = trim((string) $request->input('search'));
+
+            $query->where(function ($query) use ($search) {
+                $query->where('unitNumber', 'like', "%{$search}%")
+                    ->orWhere('unitName', 'like', "%{$search}%")
+                    ->orWhereHas('room', fn ($room) => $room->where('roomName', 'like', "%{$search}%"))
+                    ->orWhereHas('company', fn ($company) => $company->where('name', 'like', "%{$search}%"));
+            });
+        });
+
+        $data = $query->paginate(10)->withQueryString();
 
         return view('units.index', compact('data'));
     }
@@ -38,8 +49,8 @@ class UnitController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
-        $rooms = Room::with('company')->select(['roomId', 'roomName', 'compId'])->get();
+        $this->ensureCanManageUnits();
+        $rooms = $this->availableRooms();
 
         return view('units.create', compact('rooms'));
     }
@@ -50,17 +61,32 @@ class UnitController extends Controller
     public function store(UnitStoreRequest $request)
     {
         $validatedData = $request->validated();
+        $room = $this->findAvailableRoom($validatedData['roomId']);
+        $photoPath = null;
 
-        // Get room untuk ambil nama ruangan
-        $room = Room::find($validatedData['roomId']);
+        try {
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('units', 'public');
+            }
 
-        // Generate unit number otomatis berdasarkan ruangan
-        $validatedData['unitNumber'] = UnitNumberGeneratorService::generateByRoom(
-            $validatedData['roomId'],
-            $room->roomName
-        );
+            $unit = DB::transaction(function () use ($validatedData, $room, $photoPath) {
+                return Unit::create([
+                    'unitName' => $validatedData['unitName'],
+                    'unitNumber' => UnitNumberGeneratorService::generateByRoom($room->roomId, $room->roomName),
+                    'roomId' => $room->roomId,
+                    'compId' => $room->compId,
+                    'photo' => $photoPath,
+                ]);
+            });
+        } catch (Throwable $exception) {
+            if ($photoPath) {
+                Storage::disk('public')->delete($photoPath);
+            }
 
-        $unit = Unit::create($validatedData);
+            report($exception);
+
+            return back()->withInput()->with('error', 'Unit gagal disimpan. Silakan coba kembali.');
+        }
 
         return redirect()->route('units.index')->with('success', 'Unit berhasil dibuat dengan nomor: ' . $unit->unitNumber);
     }
@@ -70,11 +96,7 @@ class UnitController extends Controller
      */
     public function show(string $id)
     {
-        $data = Unit::with('company', 'room')->find($id);
-
-        if (!$data) {
-            return redirect()->back()->with('error', 'Data unit tidak ditemukan');
-        }
+        $data = $this->findAvailableUnit($id, ['company', 'room']);
 
         return view('units.show', compact('data'));
     }
@@ -84,13 +106,9 @@ class UnitController extends Controller
      */
     public function edit(string $id)
     {
-        $data = Unit::find($id);
-
-        if (!$data) {
-            return redirect()->back()->with('error', 'Data unit tidak ditemukan');
-        }
-
-        $rooms = Room::with('company')->select(['roomId', 'roomName', 'compId'])->get();
+        $this->ensureCanManageUnits();
+        $data = $this->findAvailableUnit($id);
+        $rooms = $this->availableRooms();
 
         return view('units.edit', compact('data', 'rooms'));
     }
@@ -100,14 +118,49 @@ class UnitController extends Controller
      */
     public function update(UnitUpdateRequest $request, string $id)
     {
-        $data = Unit::find($id);
+        $data = $this->findAvailableUnit($id);
+        $validatedData = $request->validated();
+        $room = $this->findAvailableRoom($validatedData['roomId']);
+        $oldPhoto = $data->photo;
+        $newPhoto = null;
 
-        if (!$data) {
-            return redirect()->back()->with('error', 'Data unit tidak ditemukan');
+        try {
+            if ($request->hasFile('photo')) {
+                $newPhoto = $request->file('photo')->store('units', 'public');
+            }
+
+            DB::transaction(function () use ($data, $validatedData, $room, $newPhoto, $request) {
+                $attributes = [
+                    'unitName' => $validatedData['unitName'],
+                    'roomId' => $room->roomId,
+                    'compId' => $room->compId,
+                ];
+
+                if ($data->roomId !== $room->roomId) {
+                    $attributes['unitNumber'] = UnitNumberGeneratorService::generateByRoom($room->roomId, $room->roomName);
+                }
+
+                if ($newPhoto) {
+                    $attributes['photo'] = $newPhoto;
+                } elseif ($request->boolean('removePhoto')) {
+                    $attributes['photo'] = null;
+                }
+
+                $data->update($attributes);
+            });
+        } catch (Throwable $exception) {
+            if ($newPhoto) {
+                Storage::disk('public')->delete($newPhoto);
+            }
+
+            report($exception);
+
+            return back()->withInput()->with('error', 'Unit gagal diperbarui. Silakan coba kembali.');
         }
 
-        $validatedData = $request->validated();
-        $data->update($validatedData);
+        if ($oldPhoto && ($newPhoto || $request->boolean('removePhoto'))) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
 
         return redirect()->route('units.index')->with('success', 'Unit berhasil diubah');
     }
@@ -117,132 +170,36 @@ class UnitController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Unit::find($id);
+        $this->ensureCanManageUnits();
+        $data = $this->findAvailableUnit($id);
 
-        if (!$data) {
-            return redirect()->back()->with('error', 'Data unit tidak ditemukan');
+        if ($data->reports()->exists()) {
+            return back()->with('error', 'Unit tidak dapat dihapus karena sudah memiliki laporan kerusakan.');
         }
 
-        $data->delete();
+        try {
+            $photo = $data->photo;
+            $data->delete();
+
+            if ($photo) {
+                Storage::disk('public')->delete($photo);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'Unit gagal dihapus karena masih digunakan oleh data lain.');
+        }
 
         return redirect()->route('units.index')->with('success', 'Unit berhasil dihapus');
     }
 
     /**
-     * Download QR Code PDF
-     */
-    public function downloadQrCode(string $id, string $format = 'label')
-    {
-        try {
-            return UnitQrCodeService::downloadPdf($id, $format);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal download PDF: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Send QR Code via email
-     */
-    public function sendQrCodeEmail(string $id, Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'email' => 'required|email',
-                'format' => 'required|in:label,certificate,tag',
-                'message' => 'nullable|string|max:500',
-            ]);
-
-            $success = UnitEmailService::sendQrCodeEmail(
-                $id,
-                $validated['email'],
-                $validated['format'],
-                $validated['message'] ?? null
-            );
-
-            if ($success) {
-                return redirect()->back()->with('success', 'QR Code berhasil dikirim ke ' . $validated['email']);
-            } else {
-                return redirect()->back()->with('error', 'Gagal mengirim QR Code');
-            }
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Bulk download QR Code PDF untuk multiple units
-     */
-    public function bulkDownloadQrCode(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'unit_ids' => 'required|array',
-                'unit_ids.*' => 'string|exists:units,unitId',
-                'format' => 'required|in:label,certificate,tag',
-            ]);
-
-            $pdf = UnitQrCodeService::generatePdf(
-                $validated['unit_ids'][0],
-                $validated['format']
-            );
-
-            // Jika multiple, generate bulk
-            if (count($validated['unit_ids']) > 1) {
-                $pdfPath = UnitQrCodeService::generateBulkPdf(
-                    $validated['unit_ids'],
-                    $validated['format']
-                );
-                return response()->download(storage_path("app/public/{$pdfPath}"));
-            }
-
-            return $pdf->download("Units-{$validated['format']}.pdf");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal download: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Send bulk QR Code via email
-     */
-    public function bulkSendQrCodeEmail(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'unit_ids' => 'required|array',
-                'unit_ids.*' => 'string|exists:units,unitId',
-                'email' => 'required|email',
-                'format' => 'required|in:label,certificate,tag',
-                'message' => 'nullable|string|max:500',
-            ]);
-
-            $success = UnitEmailService::sendBulkQrCodeEmail(
-                $validated['unit_ids'],
-                $validated['email'],
-                $validated['format'],
-                $validated['message'] ?? null
-            );
-
-            if ($success) {
-                return redirect()->back()->with('success', 'QR Code untuk ' . count($validated['unit_ids']) . ' units berhasil dikirim');
-            } else {
-                return redirect()->back()->with('error', 'Gagal mengirim QR Code');
-            }
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Print preview QR Code
+     * Print QR Code
      */
     public function printPreview(string $id, string $format = 'label')
     {
         try {
-            $unit = Unit::with('room', 'company')->find($id);
-
-            if (!$unit) {
-                return redirect()->back()->with('error', 'Unit tidak ditemukan');
-            }
+            $unit = $this->findAvailableUnit($id, ['room', 'company']);
 
             $qrBase64 = UnitQrCodeService::generateQrCode($id, 300);
 
@@ -254,5 +211,43 @@ class UnitController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
+    }
+
+    private function availableRooms()
+    {
+        $user = auth()->user();
+
+        return Room::with('company')
+            ->select(['roomId', 'roomName', 'compId'])
+            ->when($user->role->value !== 'superadmin', fn ($query) => $query->where('compId', $user->compId))
+            ->orderBy('roomName')
+            ->get();
+    }
+
+    private function findAvailableRoom(string $roomId): Room
+    {
+        $user = auth()->user();
+
+        return Room::query()
+            ->when($user->role->value !== 'superadmin', fn ($query) => $query->where('compId', $user->compId))
+            ->findOrFail($roomId);
+    }
+
+    private function findAvailableUnit(string $unitId, array $relations = []): Unit
+    {
+        $user = auth()->user();
+
+        return Unit::with($relations)
+            ->when($user->role->value !== 'superadmin', fn ($query) => $query->where('compId', $user->compId))
+            ->findOrFail($unitId);
+    }
+
+    private function ensureCanManageUnits(): void
+    {
+        abort_unless(
+            in_array(auth()->user()->role->value, ['superadmin', 'admin'], true),
+            403,
+            'Anda tidak memiliki akses untuk mengelola unit.'
+        );
     }
 }

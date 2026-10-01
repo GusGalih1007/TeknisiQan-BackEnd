@@ -67,9 +67,6 @@ class ReportController extends Controller
             // Create reporter metadata
             $reporterMetadata = [
                 'name' => $validatedData['reportByName'],
-                'phone' => $validatedData['contact_phone'],
-                'email' => $validatedData['contact_email'] ?? null,
-                'department' => $validatedData['department'] ?? null,
             ];
 
             // Create report
@@ -78,6 +75,7 @@ class ReportController extends Controller
                 'unitId' => $validatedData['unitId'],
                 'compId' => $validatedData['compId'],
                 'problem' => $validatedData['problem'],
+                'title' => $validatedData['title'],
                 'reportBy' => $reporterMetadata,
                 'reportDate' => $validatedData['reportDate'],
                 'photo' => $photoPaths ?: null,
@@ -89,7 +87,6 @@ class ReportController extends Controller
                 'unitName' => $unit->unitName,
                 'companyName' => $company->name,
                 'reporterName' => $validatedData['reportByName'],
-                'reporterPhone' => $validatedData['contact_phone'],
             ]);
 
             return redirect()->route('non-user-reports.create')

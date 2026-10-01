@@ -128,16 +128,23 @@
             </a>
 
             <div class="flex items-center gap-2 sm:gap-4">
-                <a href="{{ url('/') }}"
+                <a href="{{ route('tickets.search') }}"
                     class="text-xs sm:text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center gap-1.5">
-                    <i class="bi bi-arrow-left"></i>
+                    <i class="bi bi-search"></i>
                     <span class="hidden sm:inline">Lacak Tiket</span>
                 </a>
                 <div class="btn btn-primary">
+                    @auth
+                    <a href="{{ route('temp.dashboard') }}"
+                        class="bg-primary text-white font-bold px-3 sm:px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-dark transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm whitespace-nowrap">
+                        <span>Dashboard</span>
+                    </a>
+                    @else
                     <a href="{{ route('login') }}"
                         class="bg-primary text-white font-bold px-3 sm:px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-dark transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm whitespace-nowrap">
-                        <span>Login</span>
+                        <span>Login Admin</span>
                     </a>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -147,24 +154,23 @@
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-grow w-full">
 
         <!-- Header Halaman -->
-        <div class="text-center mb-8 sm:mb-10">
-            <div
-                class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/25 border border-secondary/40 text-purple-950 text-xs font-bold uppercase tracking-wider mb-4">
-                <i class="bi bi-broadcast text-tertiary"></i>
-                Layanan Pelaporan Tanpa Login
-            </div>
-            <h1 class="text-2xl sm:text-4xl font-extrabold text-primary">Formulir Pelaporan Kerusakan</h1>
-            <p class="text-xs sm:text-sm text-gray-500 mt-2 max-w-xl mx-auto">
+        <div class="text-left mb-8 sm:mb-10">
+            <p class="text-xs sm:text-sm text-gray-500">
                 Silakan lengkapi data barang dan detail kerusakan di bawah ini. Tim teknisi kami akan segera
                 memverifikasi dan menindaklanjuti laporan Anda.
             </p>
         </div>
+
+        <!-- Session Alerts -->
+        @include('components.alert')
 
         <!-- Kartu Formulir -->
         <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 md:p-12 relative overflow-visible">
             <!-- Ornamen Aksen Atas -->
             <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-tertiary to-secondary pointer-events-none">
             </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-primary mb-8">Formulir Pelaporan Kerusakan</h1>
+
 
             <form action="{{ route('non-user-reports.store') }}" method="POST"
                 enctype="multipart/form-data" class="space-y-8" id="reportForm">
@@ -176,27 +182,25 @@
                 <!-- SEKSI 1: PILIHAN PENCARIAN UNIT -->
                 <div>
                     <div class="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                            1
-                        </div>
                         <h2 class="text-lg font-bold text-gray-800">Cari Unit Barang</h2>
                     </div>
 
-                    <!-- Toggle Buttons: Scan QR vs Manual Input -->
-                    <div class="flex gap-3 mb-6">
-                        <button type="button" id="mode-scanner"
-                            class="px-5 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm transition flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
-                            style="cursor: pointer; pointer-events: auto;">
-                            <i class="bi bi-qr-code"></i>
-                            <span>Scan QR</span>
-                        </button>
-                        <button type="button" id="mode-manual"
-                            class="px-5 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm transition flex items-center gap-2 bg-primary text-white"
-                            style="cursor: pointer; pointer-events: auto;">
-                            <i class="bi bi-keyboard"></i>
-                            <span>Input Manual</span>
-                        </button>
+                    <!-- Toggle Switch: Scan QR vs Manual Input -->
+                    <div class="mb-6">
+                        <div class="relative grid grid-cols-2 w-full max-w-xs h-10 bg-primary rounded-full p-0.5 shadow-md shadow-primary/15">
+                            <div id="toggle-bg"
+                                class="absolute left-0.5 top-0.5 h-9 rounded-full bg-white shadow-sm transition-transform duration-300 ease-out"
+                                style="width: calc(50% - 0.125rem); transform: translateX(100%);"></div>
+
+                            <button type="button" id="mode-scanner"
+                                class="relative z-10 flex items-center justify-center rounded-full px-3 text-xs font-bold text-white transition-colors duration-300">
+                                Scan QR
+                            </button>
+                            <button type="button" id="mode-manual"
+                                class="relative z-10 flex items-center justify-center rounded-full px-3 text-xs font-bold text-primary transition-colors duration-300">
+                                Input Manual
+                            </button>
+                        </div>
                     </div>
 
                     <!-- SCANNER VIEW -->
@@ -269,14 +273,10 @@
                 <!-- SEKSI 2: DATA IDENTITAS PELAPOR -->
                 <div>
                     <div class="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                            2
-                        </div>
                         <h2 class="text-lg font-bold text-gray-800">Identitas Pelapor</h2>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
                         <!-- Nama Lengkap -->
                         <div>
                             <label for="reportByName" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -290,106 +290,76 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <!-- No. WhatsApp / Telepon -->
-                        <div>
-                            <label for="contact_phone" class="block text-sm font-semibold text-gray-700 mb-2">
-                                No. WhatsApp / Telepon <span class="text-red-500">*</span>
-                            </label>
-                            <input type="tel" id="contact_phone" name="contact_phone"
-                                placeholder="Contoh: 081234567890"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
-                                value="{{ old('contact_phone') }}" required>
-                            @error('contact_phone')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Email (Opsional) -->
-                        <div>
-                            <label for="contact_email" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Alamat Email (Opsional)
-                            </label>
-                            <input type="email" id="contact_email" name="contact_email"
-                                placeholder="ahmad@example.com"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
-                                value="{{ old('contact_email') }}">
-                            @error('contact_email')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Divisi / Departemen -->
-                        <div>
-                            <label for="department" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Divisi / Departemen
-                            </label>
-                            <input type="text" id="department" name="department"
-                                placeholder="Contoh: Operasional / HRD / Umum"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
-                                value="{{ old('department') }}">
-                        </div>
                     </div>
                 </div>
 
-                <!-- SEKSI 3: DETAIL KERUSAKAN -->
+                <!-- SEKSI 3: DETAIL KERUSAKAN & GEJALA -->
                 <div>
                     <div class="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-secondary/30 text-amber-900 flex items-center justify-center font-bold text-sm">
-                            3
-                        </div>
                         <h2 class="text-lg font-bold text-gray-800">Detail & Gejala Kerusakan</h2>
                     </div>
 
-                    <div>
-                        <label for="problem" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Deskripsi Kerusakan <span class="text-red-500">*</span>
-                        </label>
-                        <textarea id="problem" name="problem" rows="4"
-                            placeholder="Jelaskan secara detail kendala yang dialami, suara aneh, lampu indikator, atau pesan error yang muncul..."
-                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
-                            required>{{ old('problem') }}</textarea>
-                        @error('problem')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                    <div class="space-y-4">
+                        <!-- Judul Kerusakan -->
+                        <div>
+                            <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Judul Kerusakan <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="title" name="title"
+                                placeholder="Contoh: Layar Tidak Menyala"
+                                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
+                                value="{{ old('title') }}" required>
+                            @error('title')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Deskripsi Kerusakan -->
+                        <div>
+                            <label for="problem" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Deskripsi & Gejala <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="problem" name="problem" rows="4"
+                                placeholder="Jelaskan secara detail kendala yang dialami, suara aneh, lampu indikator, atau pesan error yang muncul..."
+                                class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition"
+                                required>{{ old('problem') }}</textarea>
+                            @error('problem')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 
                 <!-- SEKSI 4: BUKTI FOTO (5 INPUT FILE) -->
                 <div>
                     <div class="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
-                            4
-                        </div>
                         <h2 class="text-lg font-bold text-gray-800">Lampiran Foto Kerusakan (Opsional)</h2>
                     </div>
 
                     <p class="text-xs text-gray-600 mb-4">Maksimal 5 foto (masing-masing maksimal 5MB)</p>
 
-                    <div class="space-y-3" id="photo-inputs-container">
+                    <div class="flex gap-2 overflow-x-auto pb-2" id="photo-inputs-container">
                         @for ($i = 1; $i <= 5; $i++)
-                            <div class="relative photo-input-wrapper" data-photo-index="{{ $i }}">
-                                <label for="photo-{{ $i }}" class="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                                    Foto {{ $i }} @if($i === 1) <span class="text-gray-400">(Utama)</span> @endif
-                                </label>
-                                <div class="relative border-2 border-dashed border-gray-300 hover:border-primary rounded-xl p-4 sm:p-6 text-center transition bg-gray-50/50 cursor-pointer group photo-drop-zone"
+                            <div class="relative photo-input-wrapper flex-shrink-0" data-photo-index="{{ $i }}">
+                                <div class="relative border-2 border-dashed border-gray-300 hover:border-primary rounded-lg p-2 text-center transition bg-gray-50/50 cursor-pointer group photo-drop-zone w-24 h-24 sm:w-28 sm:h-28 flex flex-col items-center justify-center"
                                     onclick="document.getElementById('photo-{{ $i }}').click()">
                                     <input type="file" id="photo-{{ $i }}" name="photos[]" accept="image/png,image/jpg,image/jpeg,image/webp"
                                         class="hidden photo-input" data-index="{{ $i }}">
-                                    
-                                    <div class="photo-display-{{ $i }} photo-display">
-                                        <i class="bi bi-cloud-arrow-up text-2xl text-gray-400 mb-2 block"></i>
-                                        <p class="text-xs font-medium text-gray-700">Klik untuk pilih file</p>
-                                        <p class="text-[10px] text-gray-400">JPG, PNG, WEBP (Max 5MB)</p>
+
+                                    <div class="photo-display-{{ $i }} photo-display w-full h-full flex flex-col items-center justify-center">
+                                        <i class="bi bi-cloud-arrow-up text-lg text-gray-400 mb-0.5"></i>
+                                        <p class="text-[10px] font-medium text-gray-700">Foto {{ $i }}</p>
                                     </div>
 
-                                    <div id="file-info-{{ $i }}" class="photo-info hidden">
-                                        <img id="photo-preview-{{ $i }}" class="w-full h-48 object-cover rounded-lg mb-2" alt="Preview">
-                                        <p class="text-xs text-gray-600" id="file-name-{{ $i }}"></p>
+                                    <div id="file-info-{{ $i }}" class="photo-info hidden w-full h-full">
+                                        <img id="photo-preview-{{ $i }}" class="w-full h-full object-cover rounded" alt="Preview">
                                     </div>
                                 </div>
+                                <button type="button" id="remove-photo-{{ $i }}"
+                                    class="remove-photo hidden absolute -right-2 -top-2 z-20 h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                                    data-index="{{ $i }}" aria-label="Hapus foto {{ $i }}" title="Hapus foto">
+                                    <i class="bi bi-x-lg text-xs"></i>
+                                </button>
                                 @error("photos." . ($i - 1))
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -427,11 +397,11 @@
             class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-purple-200">
             <div class="flex items-center space-x-2 flex-wrap justify-center">
                 <i class="bi bi-gear-wide-connected text-secondary"></i>
-                <span class="font-bold text-white">TEKNISI QAN</span>
+                <span class="font-bold text-white">TEKNISIQAN</span>
                 <span>&bull; Layanan Pelaporan Kerusakan Barang</span>
             </div>
             <div>
-                &copy; {{ date('Y') }} Teknisi Qan. All rights reserved.
+                &copy; {{ date('Y') }} TeknisiQan. All rights reserved.
             </div>
         </div>
     </footer>

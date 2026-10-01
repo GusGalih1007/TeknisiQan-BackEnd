@@ -14,7 +14,7 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <form action="{{ route('units.store') }}" method="POST" class="space-y-6">
+            <form action="{{ route('units.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
                 <!-- Unit Name -->
@@ -24,7 +24,7 @@
                     </label>
                     <input type="text" name="unitName" id="unitName" placeholder="Masukkan nama unit"
                            value="{{ old('unitName') }}"
-                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('unitName') border-red-500 @enderror">
+                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition">
                     @error('unitName')
                         <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
                     @enderror
@@ -36,7 +36,7 @@
                         Ruangan <span class="text-red-500">*</span>
                     </label>
                     <select name="roomId" id="roomId" 
-                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('roomId') border-red-500 @enderror"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition"
                             onchange="updateCompanyInfo()">
                         <option value="">-- Pilih Ruangan --</option>
                         @foreach($rooms as $room)
@@ -50,13 +50,24 @@
                     @enderror
                 </div>
 
-                <!-- Hidden compId field -->
-                <input type="hidden" name="compId" id="compId" value="{{ old('compId') }}">
-
                 <!-- Company Info Display -->
                 <div id="companyInfoBox" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Instansi Terpilih</p>
                     <p class="text-sm font-semibold text-blue-800" id="companyName">-</p>
+                </div>
+
+                <!-- Unit Photo -->
+                <div>
+                    <label for="photo" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Foto Unit <span class="font-normal text-gray-400">(Opsional)</span>
+                    </label>
+                    <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/webp"
+                        class="block w-full rounded-xl text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary/10 file:px-4 file:py-2.5 file:font-semibold file:text-primary hover:file:bg-primary/20">
+                    <p class="mt-2 text-xs text-gray-500">JPG, PNG, atau WEBP. Maksimal 5MB.</p>
+                    @error('photo')
+                        <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                    @enderror
+                    <img id="photoPreview" class="hidden mt-4 h-44 w-full rounded-xl object-cover border border-gray-200" alt="Pratinjau foto unit">
                 </div>
 
                 <!-- Action Buttons -->
@@ -84,14 +95,11 @@
             const compName = selectedOption.getAttribute('data-comp-name');
             const companyInfoBox = document.getElementById('companyInfoBox');
             const companyNameDisplay = document.getElementById('companyName');
-            const compIdField = document.getElementById('compId');
 
             if (compId) {
-                compIdField.value = compId;
                 companyNameDisplay.textContent = compName;
                 companyInfoBox.classList.remove('hidden');
             } else {
-                compIdField.value = '';
                 companyInfoBox.classList.add('hidden');
             }
         }
@@ -101,6 +109,20 @@
             if (document.getElementById('roomId').value) {
                 updateCompanyInfo();
             }
+
+            document.getElementById('photo').addEventListener('change', function() {
+                const preview = document.getElementById('photoPreview');
+                const file = this.files[0];
+
+                if (!file) {
+                    preview.classList.add('hidden');
+                    preview.removeAttribute('src');
+                    return;
+                }
+
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            });
         });
     </script>
 @endpush

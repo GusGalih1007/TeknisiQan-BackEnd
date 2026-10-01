@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 class Unit extends Model
@@ -18,13 +20,21 @@ class Unit extends Model
         'compId',
         'roomId',
         'qrCode',
+        'photo',
     ];
 
-    public function company() {
+    public function company(): BelongsTo
+    {
         return $this->belongsTo(Company::class, 'compId', 'compId');
     }
 
-    public function room() {
+    public function room(): BelongsTo
+    {
         return $this->belongsTo(Room::class, 'roomId', 'roomId');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'unitId', 'unitId');
     }
 }

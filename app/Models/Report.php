@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Report extends Model
 {
     use HasUuids;
+
+    protected $table = 'reports';
     public $incrementing = false;
     protected $keyType = "string";
     protected $primaryKey = 'reportId';
@@ -15,6 +17,7 @@ class Report extends Model
     protected $fillable = [
         'ticketNumber',
         'unitId',
+        'title',
         'problem',
         'reportBy',
         'compId',
@@ -38,5 +41,10 @@ class Report extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'compId', 'compId');
+    }
+
+    public function responses()
+    {
+        return $this->hasMany(Response::class, 'reportId', 'reportId');
     }
 }

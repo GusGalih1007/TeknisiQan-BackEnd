@@ -52,11 +52,11 @@
 
     <!-- Sisi Kiri: Branding (Hidden on mobile, split 50% on lg) -->
     <div class="hidden lg:flex lg:w-1/2 bg-primary relative flex-col justify-between p-12 overflow-hidden text-white select-none">
-        
+
         <!-- Ornamen Latar Belakang Gear & Blur -->
         <div class="absolute -top-24 -left-24 w-96 h-96 bg-tertiary rounded-full blur-3xl opacity-30 pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary rounded-full blur-3xl opacity-20 pointer-events-none"></div>
-        
+
         <!-- Subtle Decorative Gear SVG Pattern -->
         <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
             <svg class="w-[600px] h-[600px] animate-[spin_60s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -83,12 +83,12 @@
             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/20 text-secondary text-xs font-bold uppercase tracking-wider mb-6 border border-secondary/30">
                 <i class="bi bi-shield-check"></i> Portal Klien Resmi
             </div>
-            
+
             <h1 class="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4">
                 Pelaporan Cepat, <br>
                 <span class="text-secondary">Perbaikan Tepat.</span>
             </h1>
-            
+
             <p class="text-purple-200 text-base leading-relaxed mb-8">
                 Pantau progres penanganan kerusakan peralatan Anda secara transparan dan terukur bersama tim teknisi profesional.
             </p>
@@ -131,6 +131,7 @@
 
         <!-- Wrapper Konten Form yield content) -->
         <div class="w-full max-w-md mx-auto my-auto py-6">
+            @include('components.alert')
             @yield('content')
         </div>
 

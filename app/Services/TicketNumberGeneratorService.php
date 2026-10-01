@@ -19,7 +19,7 @@ class TicketNumberGeneratorService
             $year = now()->format('y');
             $number = str_pad($next, 3, '0', STR_PAD_LEFT);
 
-            return `{$prefix}-{$year}-{$number}`;
+            return "{$prefix}-{$year}-{$number}";
         });
     }
 

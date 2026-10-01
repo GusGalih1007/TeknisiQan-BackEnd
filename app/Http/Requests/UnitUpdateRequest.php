@@ -12,7 +12,7 @@ class UnitUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return in_array($this->user()?->role?->value, ['superadmin', 'admin'], true);
     }
 
     /**
@@ -23,9 +23,10 @@ class UnitUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'unitName' => 'required|string|max:60',
-            'compId' => 'required|exists:companies,compId',
-            'roomId' => 'required|exists:rooms,roomId'
+            'unitName' => ['required', 'string', 'max:60'],
+            'roomId' => ['required', 'uuid', 'exists:rooms,roomId'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'removePhoto' => ['nullable', 'boolean'],
         ];
     }
 
@@ -34,10 +35,11 @@ class UnitUpdateRequest extends FormRequest
         return [
             'unitName.required' => 'Tolong tambahkan nama unit',
             'unitName.max' => 'Batas maksimal karakter adalah 60',
-            'compId.required' => 'Tolong masukan nama instansi',
-            'compId.exists' => 'Instansi tidak ditemukan',
             'roomId.required' => 'Masukan nama ruangan penyimpanan unit',
             'roomId.exists' => 'Ruangan tidak ditemukan',
+            'photo.image' => 'Foto unit harus berupa gambar',
+            'photo.mimes' => 'Format foto harus JPG, JPEG, PNG, atau WEBP',
+            'photo.max' => 'Ukuran foto maksimal 5MB',
         ];
     }
 }

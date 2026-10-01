@@ -14,8 +14,14 @@
 
         <!-- Detail Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
+            @if ($data->photo)
+                <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->unitName }}"
+                    class="h-64 w-full rounded-xl object-cover border border-gray-100">
+            @endif
+
             <!-- Unit Name -->
             <div class="pb-6 border-b border-gray-100">
+                <p class="text-xs font-bold text-primary mb-2">{{ $data->unitNumber }}</p>
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Nama Unit</p>
                 <p class="text-2xl font-bold text-gray-800">{{ $data->unitName }}</p>
             </div>
@@ -28,8 +34,8 @@
                         <i class="bi bi-building"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800">{{ $data->company->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $data->company->address ?? '-' }}</p>
+                        <p class="text-sm font-semibold text-gray-800">{{ $data->company?->name ?? '-' }}</p>
+                        <p class="text-xs text-gray-500">{{ $data->company?->address ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -42,7 +48,7 @@
                         <i class="bi bi-door-closed"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800">{{ $data->room->roomName }}</p>
+                        <p class="text-sm font-semibold text-gray-800">{{ $data->room?->roomName ?? '-' }}</p>
                         <p class="text-xs text-gray-500">Ruangan Penyimpanan</p>
                     </div>
                 </div>

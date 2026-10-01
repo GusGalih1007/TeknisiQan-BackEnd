@@ -43,12 +43,12 @@
         </a> --}}
 
         <!-- 3. Riwayat Laporan -->
-        <a href="#"
+        {{-- <a href="#"
             class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'history' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
             <i
                 class="bi bi-clock-history text-lg {{ $activeMenu === 'history' ? 'text-primary' : 'text-purple-200' }}"></i>
             <span>Riwayat Laporan</span>
-        </a>
+        </a> --}}
 
         <!-- 4. Daftar User -->
         <a href="{{ Route::has('users.index') ? route('users.index') : url('/users') }}"

@@ -18,6 +18,9 @@ Route::get('/', function () {
 Route::get('/lapor', [ReportController::class, 'create'])->name('non-user-reports.create');
 Route::post('/lapor', [ReportController::class, 'store'])->name('non-user-reports.store');
 
+// Halaman Lacak Tiket (Publik)
+Route::get('/track', [\App\Http\Controllers\Web\TicketController::class, 'search'])->name('tickets.search');
+
 Route::prefix('auth')->group(function () {
     Route::get('login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.post');
@@ -28,17 +31,12 @@ Route::get('/temp-dashboard', [DashboardController::class, 'index'])->name('temp
 
 Route::middleware('auth')->group(function () {
 
+    // QR Code Print Preview harus didaftarkan sebelum route resource /units/{unit}
+    Route::get('units/{id}/print-preview', [UnitController::class, 'printPreview'])->name('units.print-preview');
     Route::resource('units', UnitController::class);
     Route::resource('users', UserController::class);
     Route::resource('companies', CompanyController::class);
     Route::resource('rooms', RoomController::class);
-
-    // QR Code routes
-    Route::get('units/{id}/download-qr', [UnitController::class, 'downloadQrCode'])->name('units.download-qr');
-    Route::post('units/{id}/send-email', [UnitController::class, 'sendQrCodeEmail'])->name('units.send-email');
-    Route::post('units/bulk/download-qr', [UnitController::class, 'bulkDownloadQrCode'])->name('units.bulk-download-qr');
-    Route::post('units/bulk/send-email', [UnitController::class, 'bulkSendQrCodeEmail'])->name('units.bulk-send-email');
-    Route::get('units/{id}/print-preview', [UnitController::class, 'printPreview'])->name('units.print-preview');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');

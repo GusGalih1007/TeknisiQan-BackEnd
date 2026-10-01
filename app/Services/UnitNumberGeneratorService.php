@@ -21,20 +21,13 @@ class UnitNumberGeneratorService
         // Buat prefix dari room name (ambil 2 huruf pertama, uppercase)
         $prefix = $roomName ? strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $roomName), 0, 2)) : 'RM';
         
-        // Cari unit terakhir di ruangan ini
-        $lastUnit = Unit::where('roomId', $roomId)
-            ->orderBy('created_at', 'desc')
-            ->first();
-        
-        // Tentukan nomor urutan
-        $sequence = 1;
-        if ($lastUnit && $lastUnit->unitNumber) {
-            // Extract nomor dari format PREFIX-XXX
-            preg_match('/(\d+)$/', $lastUnit->unitNumber, $matches);
-            if (!empty($matches[1])) {
-                $sequence = (int)$matches[1] + 1;
-            }
-        }
+        $sequence = Unit::where('roomId', $roomId)
+            ->pluck('unitNumber')
+            ->reduce(function (int $highest, string $unitNumber): int {
+                preg_match('/(\d+)$/', $unitNumber, $matches);
+
+                return max($highest, (int) ($matches[1] ?? 0));
+            }, 0) + 1;
         
         // Format: PREFIX-[PAD 3 DIGITS]
         return sprintf('%s-%03d', $prefix, $sequence);
@@ -138,7 +131,7 @@ class UnitNumberGeneratorService
      */
     public static function generateAuto(array $config = []): string
     {
-        $type = $config['type'] ?? config('units.number_generator_type', 'room');
+        $type = $config['type'] ?? 'room';
         
         return match ($type) {
             'room' => self::generateByRoom(
