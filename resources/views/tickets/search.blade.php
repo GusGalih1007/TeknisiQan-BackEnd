@@ -23,7 +23,7 @@
                 <input 
                     type="text" 
                     name="ticket" 
-                    placeholder="Contoh: RCC-26-001"
+                    placeholder="Contoh: CMP-26-001"
                     value="{{ request('ticket') }}"
                     class="flex-1 px-4 sm:px-6 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     required>

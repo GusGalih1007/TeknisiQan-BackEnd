@@ -32,11 +32,17 @@ Route::get('/temp-dashboard', [DashboardController::class, 'index'])->name('temp
 Route::middleware('auth')->group(function () {
 
     // QR Code Print Preview harus didaftarkan sebelum route resource /units/{unit}
+    Route::post('units/bulk-print-preview', [UnitController::class, 'bulkPrintPreview'])->name('units.bulk-print-preview');
     Route::get('units/{id}/print-preview', [UnitController::class, 'printPreview'])->name('units.print-preview');
     Route::resource('units', UnitController::class);
     Route::resource('users', UserController::class);
     Route::resource('companies', CompanyController::class);
     Route::resource('rooms', RoomController::class);
+
+    // Report history and actions
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/{id}', [ReportController::class, 'show'])->name('reports.show');
+    Route::post('reports/{id}/reject', [ReportController::class, 'rejectReport'])->name('reports.reject');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');

@@ -67,13 +67,12 @@
             <div class="flex items-center gap-2 sm:gap-4">
                 <a href="{{ url('/lapor') }}"
                     class="text-xs sm:text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center gap-1.5">
-                    <i class="bi bi-pencil-square"></i>
-                    <span class="hidden sm:inline">Buat Laporan</span>
+                    <span class="">Buat Laporan</span>
                 </a>
                 @auth
                     <a href="{{ route('temp.dashboard') }}"
                         class="bg-primary text-white font-bold px-3 sm:px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-dark transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm whitespace-nowrap">
-                        <span class="hidden sm:inline">Dashboard</span>
+                        <span class="">Dashboard</span>
                     </a>
                 @else
                     <a href="{{ route('login') }}"

@@ -201,16 +201,50 @@ class UnitController extends Controller
         try {
             $unit = $this->findAvailableUnit($id, ['room', 'company']);
 
-            $qrBase64 = UnitQrCodeService::generateQrCode($id, 300);
+            $qrCode = UnitQrCodeService::generateQrCodeSvg($id, 300);
 
             return view('units.print-preview', [
                 'unit' => $unit,
-                'qrCode' => $qrBase64,
+                'qrCode' => $qrCode,
                 'format' => $format,
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Print multiple Unit QR codes on A4 paper.
+     */
+    public function bulkPrintPreview(Request $request)
+    {
+        $validated = $request->validate([
+            'unitIds' => ['required', 'array', 'min:1', 'max:50'],
+            'unitIds.*' => ['required', 'uuid', 'distinct'],
+        ], [
+            'unitIds.required' => 'Pilih minimal satu unit untuk dicetak.',
+            'unitIds.min' => 'Pilih minimal satu unit untuk dicetak.',
+            'unitIds.max' => 'Maksimal 50 QR Code dalam sekali cetak.',
+        ]);
+
+        $user = auth()->user();
+        $units = Unit::with(['room', 'company'])
+            ->whereIn('unitId', $validated['unitIds'])
+            ->when($user->role->value !== 'superadmin', fn ($query) => $query->where('compId', $user->compId))
+            ->get()
+            ->sortBy(fn (Unit $unit) => array_search($unit->unitId, $validated['unitIds'], true))
+            ->values();
+
+        if ($units->count() !== count($validated['unitIds'])) {
+            return back()->with('error', 'Sebagian unit tidak ditemukan atau tidak dapat Anda akses.');
+        }
+
+        $unitsData = $units->map(fn (Unit $unit) => [
+            'unit' => $unit,
+            'qrCode' => UnitQrCodeService::generateQrCodeSvg($unit->unitId, 300),
+        ]);
+
+        return view('units.bulk-print-preview', compact('unitsData'));
     }
 
     private function availableRooms()

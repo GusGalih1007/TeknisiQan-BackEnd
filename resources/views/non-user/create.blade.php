@@ -94,15 +94,6 @@
             touch-action: manipulation;
         }
 
-        /* Fix html5-qrcode overlay blocking touch events */
-        #qr-reader {
-            pointer-events: none !important;
-        }
-
-        #qr-reader * {
-            pointer-events: none !important;
-        }
-
         /* Ensure buttons are always clickable on mobile */
         button, a[role="button"], input[type="button"], input[type="submit"] {
             pointer-events: auto !important;
@@ -130,8 +121,7 @@
             <div class="flex items-center gap-2 sm:gap-4">
                 <a href="{{ route('tickets.search') }}"
                     class="text-xs sm:text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center gap-1.5">
-                    <i class="bi bi-search"></i>
-                    <span class="hidden sm:inline">Lacak Tiket</span>
+                    <span>Lacak Tiket</span>
                 </a>
                 <div class="btn btn-primary">
                     @auth
@@ -206,6 +196,9 @@
                     <!-- SCANNER VIEW -->
                     <div id="scanner-view" class="hidden">
                         <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-black" style="aspect-ratio: 1; max-width: 100%; max-height: 500px; margin: 0 auto;"></div>
+                        <div id="scanner-status" class="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-medium text-blue-700">
+                            Arahkan QR Code unit ke dalam kotak pemindai.
+                        </div>
                     </div>
 
                     <!-- MANUAL INPUT VIEW -->

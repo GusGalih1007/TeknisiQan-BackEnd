@@ -11,7 +11,7 @@ class Response extends Model
     use HasUuids;
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'reponseId';
+    protected $primaryKey = 'responsesId';
 
     protected $fillable = [
         'reportId',
@@ -25,6 +25,7 @@ class Response extends Model
     protected function casts(): array {
         return [
             'photo' => 'json',
+            'responseDate' => 'datetime',
             'status' => ResponseStatusOption::class
         ];
     }

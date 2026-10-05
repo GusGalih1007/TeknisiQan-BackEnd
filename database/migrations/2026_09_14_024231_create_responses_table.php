@@ -17,8 +17,8 @@ return new class extends Migration
             $table->text('solution');
             $table->json('photo');
             $table->datetime('responseDate');
-            $table->enum('status', ['processed', 'delayed', 'solved'])->default('processed');
-            $table->uuid('technicianId');
+            $table->enum('status', ['processed', 'delayed', 'solved', 'rejected'])->default('processed');
+            $table->uuid('technicianId')->nullabled();
             $table->timestamps();
 
             $table->foreign('reportId')->references('reportId')->on('reports')->restrictOnDelete()->cascadeOnUpdate();

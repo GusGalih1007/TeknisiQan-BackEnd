@@ -7,6 +7,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class UnitQrCodeService
 {
@@ -30,6 +31,24 @@ class UnitQrCodeService
             return base64_encode($qrCode);
         } catch (\Exception $e) {
             \Log::error('QR Code Generation Error: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
+     * Generate QR Code SVG untuk ditampilkan di browser tanpa memerlukan Imagick.
+     */
+    public static function generateQrCodeSvg(string $unitId, int $size = 300): string
+    {
+        try {
+            return QrCode::size($size)
+                ->format('svg')
+                ->errorCorrection('H')
+                ->encoding('UTF-8')
+                ->generate($unitId);
+        } catch (Throwable $exception) {
+            report($exception);
+
             return '';
         }
     }

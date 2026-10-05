@@ -1,7 +1,8 @@
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 let html5QrcodeScanner = null;
 let isScannerRunning = false;
+let isProcessingQrCode = false;
 const selectedPhotos = [];
 
 // Toggle between Scanner and Manual modes
@@ -60,15 +61,26 @@ function startScanner() {
 }
 
 function initializeScanner() {
-    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    html5QrcodeScanner = new Html5Qrcode('qr-reader', {
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        verbose: false,
+    });
 
     const config = {
-        fps: 15,
+        fps: 10,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const edgeSize = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.7);
+
+            return { width: edgeSize, height: edgeSize };
+        },
         aspectRatio: 1.0,
         disableFlip: false,
-        rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: true
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true,
+        },
     };
+
+    updateScannerStatus('Arahkan QR Code unit ke dalam kotak pemindai.', 'info');
 
     html5QrcodeScanner.start(
         { facingMode: "environment" },
@@ -77,6 +89,7 @@ function initializeScanner() {
         onQrCodeError
     ).then(() => {
         isScannerRunning = true;
+        updateScannerStatus('Kamera aktif. Arahkan QR Code unit ke dalam kotak.', 'info');
     }).catch(err => {
         console.error("Camera error:", err);
         let errorMsg = 'Tidak dapat mengakses kamera.';
@@ -92,31 +105,71 @@ function initializeScanner() {
             }
         }
         alert(errorMsg + '\n\nGunakan tab "Input Manual" untuk memilih unit secara manual.');
+        updateScannerStatus(errorMsg, 'error');
         isScannerRunning = false;
     });
 }
 
-function stopScanner() {
+async function stopScanner() {
     if (html5QrcodeScanner && isScannerRunning) {
-        html5QrcodeScanner.stop().then(() => {
+        try {
+            await html5QrcodeScanner.stop();
             isScannerRunning = false;
-        }).catch(err => {
+        } catch (err) {
             console.error("Error stopping scanner:", err);
             isScannerRunning = false;
-        });
+        }
     }
 }
 
-function onQrCodeSuccess(decodedText, decodedResult) {
+async function onQrCodeSuccess(decodedText) {
+    if (isProcessingQrCode) return;
+
+    isProcessingQrCode = true;
     console.log(`QR Code detected: ${decodedText}`);
-    selectUnit(decodedText);
-    stopScanner();
-    // Switch to manual mode after successful scan
-    toggleMode('manual');
+    updateScannerStatus('QR terdeteksi. Mengambil data unit...', 'loading');
+
+    const unitId = extractUnitId(decodedText);
+    if (!unitId) {
+        updateScannerStatus('QR Code tidak valid. Gunakan QR Code unit dari sistem.', 'error');
+        isProcessingQrCode = false;
+        return;
+    }
+
+    const unitFound = await selectUnit(unitId);
+    if (unitFound) {
+        await stopScanner();
+        toggleMode('manual');
+    } else {
+        updateScannerStatus('Data unit tidak ditemukan. Silakan coba QR Code lain.', 'error');
+    }
+
+    isProcessingQrCode = false;
 }
 
 function onQrCodeError(errorMessage) {
     // Silent - don't log errors during continuous scanning
+}
+
+function extractUnitId(decodedText) {
+    const value = String(decodedText || '').trim();
+    const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+    return value.match(uuidPattern)?.[0] || null;
+}
+
+function updateScannerStatus(message, type = 'info') {
+    const status = document.getElementById('scanner-status');
+    if (!status) return;
+
+    const styles = {
+        info: ['bg-blue-50', 'border-blue-200', 'text-blue-700'],
+        loading: ['bg-amber-50', 'border-amber-200', 'text-amber-700'],
+        error: ['bg-red-50', 'border-red-200', 'text-red-700'],
+    };
+
+    status.className = `mt-3 rounded-xl border px-4 py-3 text-xs font-medium ${styles[type].join(' ')}`;
+    status.textContent = message;
 }
 
 // Load units based on selected company
@@ -146,42 +199,41 @@ function loadUnits(compId) {
 }
 
 // Select unit
-function selectUnit(unitId) {
+async function selectUnit(unitId) {
     if (!unitId) {
         document.getElementById('unit-info').classList.add('hidden');
         document.getElementById('unitId').value = '';
         document.getElementById('compId').value = '';
-        return;
+        return false;
     }
 
-    fetch(`/api/units/${unitId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const unit = data.data;
-                document.getElementById('unitId').value = unit.unitId;
-                document.getElementById('compId').value = unit.compId;
-
-                // Update info display
-                document.getElementById('info-unit-number').textContent = unit.unitNumber;
-                document.getElementById('info-unit-name').textContent = unit.unitName;
-                document.getElementById('info-room-name').textContent = unit.room?.roomName || '-';
-                document.getElementById('info-company-name').textContent = unit.company?.name || '-';
-
-                document.getElementById('unit-info').classList.remove('hidden');
-
-                // Set report date
-                const now = new Date();
-                document.getElementById('reportDate').value = now.toISOString();
-
-                // Scroll to form
-                document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching unit data:', error);
-            alert('Gagal memuat data unit. Silakan coba lagi.');
+    try {
+        const response = await fetch(`/api/units/${encodeURIComponent(unitId)}`, {
+            headers: { Accept: 'application/json' },
         });
+        const data = await response.json();
+
+        if (!response.ok || data.status !== 'success' || !data.data) {
+            return false;
+        }
+
+        const unit = data.data;
+        document.getElementById('unitId').value = unit.unitId;
+        document.getElementById('compId').value = unit.compId;
+        document.getElementById('info-unit-number').textContent = unit.unitNumber;
+        document.getElementById('info-unit-name').textContent = unit.unitName;
+        document.getElementById('info-room-name').textContent = unit.room?.roomName || '-';
+        document.getElementById('info-company-name').textContent = unit.company?.name || '-';
+        document.getElementById('unit-info').classList.remove('hidden');
+        document.getElementById('reportDate').value = new Date().toISOString();
+        document.getElementById('unit-info').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        return true;
+    } catch (error) {
+        console.error('Error fetching unit data:', error);
+        updateScannerStatus('Gagal mengambil data unit. Periksa koneksi lalu coba lagi.', 'error');
+        return false;
+    }
 }
 
 // File upload handling - keep files compact and display their thumbnails

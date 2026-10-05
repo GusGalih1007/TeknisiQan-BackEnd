@@ -11,11 +11,46 @@
         .print { background: #5003c0; color: #fff; }
         .back { background: #fff; color: #333; }
         .label { width: 320px; margin: 0 auto 24px; padding: 24px; box-sizing: border-box; background: #fff; border: 2px solid #5003c0; border-radius: 16px; text-align: center; }
-        .label img { width: 220px; height: 220px; }
+        .qr-code { display: flex; justify-content: center; }
+        .qr-code svg { width: 220px; height: 220px; }
         .number { margin: 12px 0 6px; color: #5003c0; font-size: 24px; font-weight: 700; }
         .name { font-size: 18px; font-weight: 700; }
         .meta { margin-top: 8px; color: #666; font-size: 13px; }
-        @media print { body { background: #fff; } .toolbar { display: none; } .label { margin-top: 0; } }
+        @page {
+            size: 85mm 100mm;
+            margin: 10mm;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 65mm;
+                height: 80mm;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .label {
+                width: 65mm;
+                height: 80mm;
+                margin: 0;
+                padding: 3mm;
+                border-radius: 4mm;
+                page-break-inside: avoid;
+            }
+
+            .qr-code svg {
+                width: 48mm;
+                height: 48mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -24,7 +59,11 @@
         <button class="print" type="button" onclick="window.print()">Cetak QR</button>
     </div>
     <main class="label">
-        <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code {{ $unit->unitNumber }}">
+        @if ($qrCode)
+            <div class="qr-code" role="img" aria-label="QR Code {{ $unit->unitNumber }}">{!! $qrCode !!}</div>
+        @else
+            <p>QR Code gagal dibuat.</p>
+        @endif
         <div class="number">{{ $unit->unitNumber }}</div>
         <div class="name">{{ $unit->unitName }}</div>
         <div class="meta">{{ $unit->room?->roomName ?? '-' }} &bull; {{ $unit->company?->name ?? '-' }}</div>

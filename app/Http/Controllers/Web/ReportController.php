@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ResponseStatusOption;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\NonUserReportStoreRequest;
 use App\Models\Company;
 use App\Models\Report;
+use App\Models\Response;
 use App\Models\Unit;
 use App\Services\TicketNumberGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
@@ -16,9 +19,47 @@ class ReportController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $auth = auth()->user();
+
+        // Admin/superadmin: lihat laporan dari perusahaan mereka
+        // Technician: read-only
+        $query = Report::with(['company', 'unit', 'responses']);
+
+        // Role-based filtering
+        if ($auth->role->value === 'admin') {
+            $query->whereHas('company', function ($q) use ($auth) {
+                $q->where('compId', $auth->compId);
+            });
+        } elseif ($auth->role->value === 'technician') {
+            // Technician bisa lihat semua laporan
+        }
+
+        // Search by ticket number atau unit name
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where('ticketNumber', 'like', "%{$search}%")
+                  ->orWhereHas('unit', function ($q) use ($search) {
+                      $q->where('unitName', 'like', "%{$search}%");
+                  });
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status) {
+            $status = $request->status;
+            if ($status === 'pending') {
+                $query->whereDoesntHave('responses');
+            } else {
+                $query->whereHas('responses', function ($q) use ($status) {
+                    $q->where('status', $status)->latest('responseDate')->limit(1);
+                });
+            }
+        }
+
+        $reports = $query->latest('reportDate')->paginate(10);
+
+        return view('reports.index', compact('reports'));
     }
 
     /**
@@ -105,7 +146,15 @@ class ReportController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $report = Report::with(['company', 'unit.room', 'responses.technician'])->findOrFail($id);
+
+        // Authorization check
+        $auth = auth()->user();
+        if ($auth->role->value === 'admin' && $report->compId !== $auth->compId) {
+            abort(403, 'Anda tidak memiliki akses ke laporan ini');
+        }
+
+        return view('reports.show', compact('report'));
     }
 
     /**
@@ -130,5 +179,43 @@ class ReportController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Reject a report by creating a response with rejected status
+     */
+    public function rejectReport(Request $request, string $id)
+    {
+        $report = Report::findOrFail($id);
+
+        // Authorization: only admin (same company) or superadmin
+        $auth = auth()->user();
+        if ($auth->role->value === 'admin' && $report->compId !== $auth->compId) {
+            abort(403, 'Anda tidak memiliki akses untuk menolak laporan ini');
+        }
+
+        // Validate
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            DB::transaction(function () use ($report, $validated, $auth) {
+                // Create response with rejected status
+                Response::create([
+                    'reportId' => $report->reportId,
+                    'solution' => $validated['reason'],
+                    'photo' => [],
+                    'responseDate' => now(),
+                    'status' => ResponseStatusOption::Rejected,
+                    'technicianId' => $auth->userId,
+                ]);
+            });
+
+            return back()->with('success', 'Laporan berhasil ditolak');
+        } catch (\Exception $e) {
+            Log::error('Report rejection error: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menolak laporan: ' . $e->getMessage());
+        }
     }
 }

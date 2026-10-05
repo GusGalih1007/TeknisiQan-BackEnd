@@ -9,6 +9,7 @@ export default defineConfig({
             input: [
                 'resources/sass/app.scss',
                 'resources/js/app.js',
+                'resources/js/report-form.js',
             ],
             refresh: true,
         }),

@@ -32,13 +32,36 @@
                 </a>
             @endif
         </div>
+
+        <form id="bulkPrintForm" action="{{ route('units.bulk-print-preview') }}" method="POST" target="_blank"
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-gray-100">
+            @csrf
+            <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer">
+                <input type="checkbox" id="selectAllUnits"
+                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+                Pilih semua di halaman ini
+            </label>
+            <div class="flex items-center gap-3">
+                <span id="selectedUnitCount" class="text-xs font-semibold text-gray-500">0 unit dipilih</span>
+                <button type="submit" id="bulkPrintButton" disabled
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300">
+                    <i class="bi bi-printer"></i>
+                    Print QR A4
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Units Grid (Card Layout) -->
     @if ($data->count() > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($data as $unit)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
+                <div class="unit-card relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition group">
+                    <label class="absolute top-3 left-3 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-white/95 shadow-md"
+                        title="Pilih {{ $unit->unitName }}">
+                        <input type="checkbox" name="unitIds[]" value="{{ $unit->unitId }}" form="bulkPrintForm"
+                            class="unit-checkbox h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary">
+                    </label>
                     <!-- Image Section -->
                     <div class="relative h-40 bg-gray-100 overflow-hidden">
                         @if ($unit->photo && file_exists(public_path('storage/' . $unit->photo)))
@@ -80,25 +103,25 @@
                             <a href="{{ route('units.show', $unit->unitId) }}"
                                 class="flex-1 text-center bg-purple-100 text-primary hover:bg-purple-200 font-semibold py-2 rounded-lg transition text-xs"
                                 title="Detail Unit">
-                                <i class="bi bi-eye mr-1"></i>Detail
+                                Detail
                             </a>
                             <a href="{{ route('units.print-preview', $unit->unitId) }}"
                                 class="flex-1 text-center bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-semibold py-2 rounded-lg transition text-xs"
                                 title="Print QR Code">
-                                <i class="bi bi-printer mr-1"></i>Print
+                                Print
                             </a>
                             @if (in_array(auth()->user()->role->value, ['superadmin', 'admin'], true))
                                 <a href="{{ route('units.edit', $unit->unitId) }}"
                                     class="flex-1 text-center bg-blue-100 text-blue-800 hover:bg-blue-200 font-semibold py-2 rounded-lg transition text-xs"
                                     title="Edit Unit">
-                                    <i class="bi bi-pencil mr-1"></i>Edit
+                                    Edit
                                 </a>
                                 <button type="button"
                                     class="flex-1 text-center bg-red-100 text-red-800 hover:bg-red-200 font-semibold py-2 rounded-lg transition text-xs"
                                     title="Hapus Unit"
                                     data-delete-url="{{ route('units.destroy', $unit->unitId) }}"
                                     onclick="openDeleteModal(this.dataset.deleteUrl, @js($unit->unitName))">
-                                    <i class="bi bi-trash mr-1"></i>Hapus
+                                    Hapus
                                 </button>
                             @endif
                         </div>
@@ -261,6 +284,41 @@
         document.getElementById('deleteModal')?.addEventListener('click', function(event) {
             if (event.target === this) {
                 closeDeleteModal();
+            }
+        });
+
+        const unitCheckboxes = Array.from(document.querySelectorAll('.unit-checkbox'));
+        const selectAllUnits = document.getElementById('selectAllUnits');
+        const selectedUnitCount = document.getElementById('selectedUnitCount');
+        const bulkPrintButton = document.getElementById('bulkPrintButton');
+
+        function updateBulkSelection() {
+            const selectedCount = unitCheckboxes.filter((checkbox) => checkbox.checked).length;
+
+            selectedUnitCount.textContent = `${selectedCount} unit dipilih`;
+            bulkPrintButton.disabled = selectedCount === 0;
+            selectAllUnits.checked = unitCheckboxes.length > 0 && selectedCount === unitCheckboxes.length;
+            selectAllUnits.indeterminate = selectedCount > 0 && selectedCount < unitCheckboxes.length;
+
+            unitCheckboxes.forEach((checkbox) => {
+                checkbox.closest('.unit-card')?.classList.toggle('ring-2', checkbox.checked);
+                checkbox.closest('.unit-card')?.classList.toggle('ring-primary', checkbox.checked);
+            });
+        }
+
+        selectAllUnits?.addEventListener('change', function() {
+            unitCheckboxes.forEach((checkbox) => {
+                checkbox.checked = this.checked;
+            });
+            updateBulkSelection();
+        });
+
+        unitCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', updateBulkSelection));
+
+        document.getElementById('bulkPrintForm')?.addEventListener('submit', function(event) {
+            if (!unitCheckboxes.some((checkbox) => checkbox.checked)) {
+                event.preventDefault();
+                alert('Pilih minimal satu unit untuk dicetak.');
             }
         });
     </script>

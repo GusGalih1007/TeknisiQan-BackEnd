@@ -11,9 +11,8 @@
         <!-- Header & Search Section -->
         <div class="p-6 border-b border-gray-100">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-                <div>
                     <!-- Search Bar -->
-                    <div class="relative">
+                    <div class="flex-1">
                         <form method="GET" action="{{ route('users.index') }}" class="flex gap-2">
                             <div class="flex-1 relative">
                                 <input type="text" name="search" placeholder="Cari nama atau email..."
@@ -26,7 +25,6 @@
                             </button>
                         </form>
                     </div>
-                </div>
 
                 <a href="{{ route('users.create') }}"
                     class="bg-secondary text-primary font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-secondary-dark transition duration-200 flex items-center justify-center space-x-2 text-sm w-full sm:w-auto">

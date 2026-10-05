@@ -7,4 +7,5 @@ enum ResponseStatusOption: string
     case Processed = 'processed';
     case Delayed = 'delayed';
     case Solved = 'solved';
+    case Rejected = 'rejected';
 }

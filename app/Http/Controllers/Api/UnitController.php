@@ -30,6 +30,14 @@ class UnitController extends Controller
     {
         $data = Unit::with('room', 'company')->find($id);
 
+        if (! $data) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unit tidak ditemukan',
+                'data' => null,
+            ], 404);
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $data
