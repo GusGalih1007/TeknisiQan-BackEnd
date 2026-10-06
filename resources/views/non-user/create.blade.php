@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Formulir Pelaporan Kerusakan - Teknisi Qan</title>
+    <title>Formulir Pelaporan Kerusakan - TeknisiQan</title>
 
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,7 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
             <a href="{{ url('/') }}" class="flex items-center space-x-3 text-primary">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center">
-                    <img src="{{ asset('important/Logo.png') }}" alt="Logo Teknisi Qan"
+                    <img src="{{ asset('important/Logo.png') }}" alt="Logo TeknisiQan"
                         class="w-full h-full object-contain">
                 </div>
                 <div>
@@ -143,14 +143,6 @@
     <!-- Konten Utama: Form Pelaporan Kerusakan -->
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-grow w-full">
 
-        <!-- Header Halaman -->
-        <div class="text-left mb-8 sm:mb-10">
-            <p class="text-xs sm:text-sm text-gray-500">
-                Silakan lengkapi data barang dan detail kerusakan di bawah ini. Tim teknisi kami akan segera
-                memverifikasi dan menindaklanjuti laporan Anda.
-            </p>
-        </div>
-
         <!-- Session Alerts -->
         @include('components.alert')
 
@@ -159,8 +151,13 @@
             <!-- Ornamen Aksen Atas -->
             <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-tertiary to-secondary pointer-events-none">
             </div>
-            <h1 class="text-2xl sm:text-4xl font-extrabold text-primary mb-8">Formulir Pelaporan Kerusakan</h1>
-
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-primary mb-2">Formulir Pelaporan Kerusakan</h1>
+            <!-- Header Halaman -->
+        <div class="text-left mb-4 sm:mb-4">
+            <p class="text-xs sm:text-sm text-gray-500">
+                Silakan lengkapi data barang dan detail kerusakan di bawah ini.
+            </p>
+        </div>
 
             <form action="{{ route('non-user-reports.store') }}" method="POST"
                 enctype="multipart/form-data" class="space-y-8" id="reportForm">

@@ -1,16 +1,16 @@
-<!-- Sidebar Navigasi Teknisi Qan -->
+<!-- Sidebar Navigasi TeknisiQan -->
 <aside id="sidebar"
     class="fixed inset-y-0 left-0 z-40 w-64 bg-primary text-white flex flex-col shadow-2xl transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:z-auto">
     <!-- Logo Header Sidebar -->
     <div class="h-20 flex items-center justify-between px-6 border-b border-white/10 bg-primary-dark/30">
         <a href="{{ url('/') }}" class="flex items-center space-x-3 text-white">
             <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-white/20">
-                <img src="{{ asset('important/Logo.png') }}" alt="Logo Teknisi Qan" class="w-full h-full object-contain">
+                <img src="{{ asset('important/Logo.png') }}" alt="Logo TeknisiQan" class="w-full h-full object-contain">
 
             </div>
             <div>
-                <span class="text-lg font-extrabold tracking-wider block leading-none">TEKNISI QAN</span>
-                <span class="text-[10px] text-purple-200 tracking-normal font-light">Client Portal</span>
+                <span class="text-lg font-extrabold tracking-wider block leading-none">TEKNISIQAN</span>
+                {{-- <span class="text-[10px] text-purple-200 tracking-normal font-light">Client Portal</span> --}}
             </div>
         </a>
         <!-- Close Button di Mobile -->
@@ -27,7 +27,7 @@
         @endphp
 
         <!-- 1. Dashboard -->
-        <a href="{{ Route::has('home') ? route('home') : url('/home') }}"
+        <a href="{{ url('/temp-dashboard') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'dashboard' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
             <i
                 class="bi bi-grid-1x2-fill text-lg {{ $activeMenu === 'dashboard' ? 'text-primary' : 'text-secondary' }}"></i>
@@ -43,12 +43,12 @@
         </a> --}}
 
         <!-- 3. Riwayat Laporan -->
-        {{-- <a href="#"
+        <a href="{{ Route::has('reports.index') ? route('reports.index') : url('/reports') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'history' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-purple-100 hover:bg-white/10 hover:text-white' }}">
             <i
                 class="bi bi-clock-history text-lg {{ $activeMenu === 'history' ? 'text-primary' : 'text-purple-200' }}"></i>
             <span>Riwayat Laporan</span>
-        </a> --}}
+        </a>
 
         <!-- 4. Daftar User -->
         <a href="{{ Route::has('users.index') ? route('users.index') : url('/users') }}"

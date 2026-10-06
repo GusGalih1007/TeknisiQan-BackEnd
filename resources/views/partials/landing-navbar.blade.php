@@ -1,4 +1,4 @@
-<!-- Navbar Landing Page Teknisi Qan -->
+<!-- Navbar Landing Page TeknisiQan -->
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
         <!-- Kiri: Logo TEKNISI QAN -->

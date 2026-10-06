@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', (isset($data) ? 'Edit' : 'Tambah') . ' Ruangan - Teknisi Qan')
+@section('title', (isset($data) ? 'Edit' : 'Tambah') . ' Ruangan - TeknisiQan')
 @section('page-title', (isset($data) ? 'Edit' : 'Tambah') . ' Ruangan')
 @section('sidebar-active', 'rooms')
 

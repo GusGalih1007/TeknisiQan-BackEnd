@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Edit Unit - Teknisi Qan')
+@section('title', 'Edit Unit - TeknisiQan')
 @section('page-title', 'Edit Unit')
 @section('sidebar-active', 'units')
 

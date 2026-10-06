@@ -26,7 +26,7 @@ class UserUpdateRequest extends FormRequest
             'name' => 'required|string|max:30',
             'email' => 'required|email',
             'phone' => 'required|numeric',
-            'password' => 'required|confirmed|min:8',
+            'password' => 'nullable|confirmed|min:8',
             'role' => 'required|in:superadmin,admin,technician',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp',
             'compId' => 'nullable|exists:companies,compId'
@@ -41,6 +41,9 @@ class UserUpdateRequest extends FormRequest
             'email.required' => 'Tolong masukan email pengguna',
             'email.email' => 'Gunakan alamat email yang valid',
             'phone.required' => 'Tolong masukan nomor pengguna',
+            'phone.numeric' => 'Nomor telepon harus berupa angka',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok',
+            'password.min' => 'Kata sandi minimal 8 karakter',
             'role.required' => 'Tolong pilih jabatan pengguna',
             'role.in' => 'Jabatan pengguna tidak valid',
             'photo.images' => 'Foto pengguna harus berupa gambar',

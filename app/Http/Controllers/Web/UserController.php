@@ -79,6 +79,14 @@ class UserController extends Controller
                 $validatedData['role'] = RoleOption::Technician->value;
             }
 
+            // Validasi: Jika role adalah admin, cek apakah company sudah memiliki leader
+            if ($validatedData['role'] === RoleOption::Admin->value) {
+                $company = Company::find($validatedData['compId']);
+                if ($company && $company->leaderId !== null) {
+                    return redirect()->back()->with('error', 'Instansi ini sudah memiliki admin/leader. Silahkan pilih yang lain')->withInput();
+                }
+            }
+
             // Handle photo upload
             if ($request->hasFile('photo')) {
                 $file = $request->file('photo');
@@ -87,7 +95,15 @@ class UserController extends Controller
                 $validatedData['photo'] = 'photos/'.$filename;
             }
 
-            User::create($validatedData);
+            $newUser = User::create($validatedData);
+
+            // Set user sebagai leader jika role adalah admin
+            if ($validatedData['role'] === RoleOption::Admin->value) {
+                $company = Company::find($validatedData['compId']);
+                if ($company) {
+                    $company->update(['leaderId' => $newUser->userId]);
+                }
+            }
 
             return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan');
 
@@ -156,14 +172,36 @@ class UserController extends Controller
             }
 
             $validatedData = $request->validated();
+            $oldRole = $data->role->value;
+            $oldCompId = $data->compId;
 
             if ($user->role->value == 'admin') {
                 $validatedData['compId'] = $user->compId;
                 $validatedData['role'] = RoleOption::Technician->value;
             }
 
+            // Validasi: Jika role diubah menjadi admin, cek apakah company sudah memiliki leader (selain user ini sendiri)
+            if ($validatedData['role'] === RoleOption::Admin->value && $oldRole !== RoleOption::Admin->value) {
+                $company = Company::find($validatedData['compId']);
+                if ($company && $company->leaderId !== null && $company->leaderId !== $data->userId) {
+                    return redirect()->back()->with('error', 'Instansi ini sudah memiliki admin/leader. Silahkan pilih yang lain')->withInput();
+                }
+            }
+
+            // Remove password from update jika kosong/null
+            if (empty($validatedData['password'])) {
+                unset($validatedData['password']);
+            }
+
+            // Handle photo deletion
+            if ($request->input('deletePhoto') == '1') {
+                if ($data->photo && file_exists(public_path('storage/'.$data->photo))) {
+                    unlink(public_path('storage/'.$data->photo));
+                }
+                $validatedData['photo'] = null;
+            }
             // Handle photo upload
-            if ($request->hasFile('photo')) {
+            elseif ($request->hasFile('photo')) {
                 // Delete old photo if exists
                 if ($data->photo && file_exists(public_path('storage/'.$data->photo))) {
                     unlink(public_path('storage/'.$data->photo));
@@ -176,6 +214,30 @@ class UserController extends Controller
             }
 
             $data->update($validatedData);
+
+            // Handle leader changes saat role atau company berubah
+            // Jika user diubah menjadi admin
+            if ($validatedData['role'] === RoleOption::Admin->value) {
+                // Jika company berubah, remove leader dari company lama
+                if ($oldCompId !== $validatedData['compId']) {
+                    $oldCompany = Company::find($oldCompId);
+                    if ($oldCompany && $oldCompany->leaderId === $data->userId) {
+                        $oldCompany->update(['leaderId' => null]);
+                    }
+                }
+                // Set sebagai leader di company baru/saat ini
+                $company = Company::find($validatedData['compId']);
+                if ($company) {
+                    $company->update(['leaderId' => $data->userId]);
+                }
+            }
+            // Jika user dihapus dari role admin (diubah ke role lain)
+            elseif ($oldRole === RoleOption::Admin->value && $validatedData['role'] !== RoleOption::Admin->value) {
+                $company = Company::find($oldCompId);
+                if ($company && $company->leaderId === $data->userId) {
+                    $company->update(['leaderId' => null]);
+                }
+            }
 
             return redirect()->route('users.index')->with('success', 'User berhasil diperbarui');
 

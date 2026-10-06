@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Login - Teknisi Qan')</title>
+    <title>@yield('title', 'Login - TeknisiQan')</title>
 
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,7 +69,7 @@
         <div class="z-10 flex items-center justify-between">
             <a href="{{ url('/') }}" class="flex items-center space-x-3 text-white hover:text-secondary transition">
                 <div class="w-10 h-10 rounded-xl bg-white backdrop-blur-md flex items-center justify-center border border-white/20">
-                    <img src="{{ asset('important/Logo.png') }}" alt="Logo Teknisi Qan" class="w-full h-full object-contain">
+                    <img src="{{ asset('important/Logo.png') }}" alt="Logo TeknisiQan" class="w-full h-full object-contain">
                 </div>
                 <span class="text-xl font-extrabold tracking-wider">TEKNISI QAN</span>
             </a>
@@ -112,7 +112,7 @@
 
         <!-- Bottom: Footer Brand -->
         <div class="z-10 text-xs text-purple-300">
-            &copy; {{ date('Y') }} Teknisi Qan. Hak cipta dilindungi undang-undang.
+            &copy; {{ date('Y') }} TeknisiQan. Hak cipta dilindungi undang-undang.
         </div>
     </div>
 
@@ -137,7 +137,7 @@
 
         <!-- Footer kecil untuk mobile / copyright -->
         <div class="text-center pt-8 text-xs text-gray-400">
-            Aplikasi Pelaporan Kerusakan Barang &bull; Teknisi Qan
+            Aplikasi Pelaporan Kerusakan Barang &bull; TeknisiQan
         </div>
     </div>
 

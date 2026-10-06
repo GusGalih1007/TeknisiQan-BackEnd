@@ -79,7 +79,7 @@
     <div class="tag-container">
         <div class="tag-header">
             <h4>UNIT TAG</h4>
-            <p>{{ config('app.name', 'Teknisi Qan') }}</p>
+            <p>{{ config('app.name', 'TeknisiQan') }}</p>
         </div>
         
         <div class="tag-content">

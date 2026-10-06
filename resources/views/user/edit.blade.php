@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', $pageTitle . ' - Teknisi Qan')
+@section('title', $pageTitle . ' - TeknisiQan')
 @section('page-title', $pageTitle)
 @section('sidebar-active', 'users')
 
@@ -68,9 +68,10 @@
                         <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
                             Password <span class="text-red-500">*</span>
                         </label>
-                        <input type="password" id="password" name="password" placeholder="Biarkan kosong jika tidak ingin mengubah"
+                        <input type="password" id="password" name="password" placeholder="Minimal 8 karakter"
                             class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('password') border-red-500 @enderror">
-                        <p class="text-xs text-gray-500 mt-2">Minimal 8 karakter</p>
+                        {{-- <p class="text-xs text-gray-500 mt-2">Minimal 8 karakter</p> --}}
+                        <p class="text-xs text-gray-500 mt-2">Biarkan kosong jika tidak ingin mengubah password</p>
                         @error('password')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -103,7 +104,8 @@
                             <select id="compId" name="compId"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('compId') border-red-500 @enderror"
                                 @if (auth()->user()->role->value == 'admin') disabled @endif
-                                @if (auth()->user()->role->value == 'superadmin') required @endif>
+                                @if (auth()->user()->role->value == 'superadmin') required @endif
+                                onchange="handleCompanyChange()">
                                 <option value="">-- Pilih Perusahaan --</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->compId }}"
@@ -129,7 +131,7 @@
                             </label>
                             <select id="role" name="role"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('role') border-red-500 @enderror"
-                                required>
+                                required onchange="handleRoleChange()">
                                 <option value="">-- Pilih Role --</option>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->value }}"
@@ -171,10 +173,18 @@
                             <div class="relative inline-block">
                                 <img src="{{ asset('storage/' . $data->photo) }}" alt="{{ $data->name }}" 
                                     class="w-32 h-32 object-cover rounded-xl border border-gray-200">
-                                <button type="button" onclick="document.getElementById('photo').click()" 
-                                    class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-lg hover:bg-primary-dark transition">
-                                    <i class="bi bi-pencil text-sm"></i>
-                                </button>
+                                <div class="absolute bottom-0 right-0 flex gap-1">
+                                    <button type="button" onclick="document.getElementById('photo').click()" 
+                                        class="bg-primary text-white p-2 rounded-lg hover:bg-primary-dark transition"
+                                        title="Ubah Foto">
+                                        <i class="bi bi-pencil text-sm"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteCurrentPhoto()" 
+                                        class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
+                                        title="Hapus Foto">
+                                        <i class="bi bi-trash text-sm"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -195,6 +205,10 @@
                             Batal Ubah Foto
                         </button>
                     </div>
+
+                    <!-- Hidden field for delete photo -->
+                    <input type="hidden" id="deletePhoto" name="deletePhoto" value="0">
+
                     @error('photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -215,6 +229,82 @@
         </div>
     </div>
 
+    <!-- Modal: Delete Photo Confirmation -->
+    <div id="deletePhotoModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-lg max-w-md w-full mx-4 overflow-hidden animate-in">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-red-50 to-orange-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-trash text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Hapus Foto Profil</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <p class="text-gray-700 font-medium">
+                    Apakah Anda yakin ingin menghapus foto profil ini?
+                </p>
+                <p class="text-sm text-gray-500 bg-yellow-50 border border-yellow-100 rounded-lg p-3">
+                    <i class="bi bi-info-circle text-yellow-600 mr-2"></i>
+                    Tindakan ini tidak dapat dibatalkan. Foto akan dihapus permanen.
+                </p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button type="button" onclick="closeDeletePhotoModal()"
+                    class="px-6 py-2.5 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition">
+                    <i class="bi bi-x-lg mr-2"></i>Batal
+                </button>
+                <button type="button" onclick="confirmDeletePhoto()"
+                    class="px-6 py-2.5 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition">
+                    <i class="bi bi-trash mr-2"></i>Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Leader Already Exists -->
+    <div id="leaderExistsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-lg max-w-md w-full mx-4 overflow-hidden animate-in">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                        <i class="bi bi-exclamation-triangle text-amber-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Instansi Sudah Memiliki Admin</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <p class="text-gray-700 font-medium">
+                    Instansi ini sudah memiliki admin/leader. Silahkan pilih yang lain.
+                </p>
+                <p class="text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                    <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                    Anda bisa merubah leader dari instansi tertentu di halaman instansi.
+                </p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button type="button" onclick="closeLeaderExistsModal()"
+                    class="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition">
+                    <i class="bi bi-check-lg mr-2"></i>Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             function previewImage(event) {
@@ -232,7 +322,107 @@
             function removeImage() {
                 document.getElementById('photo').value = '';
                 document.getElementById('imagePreview').classList.add('hidden');
+                document.getElementById('deletePhoto').value = '0';
             }
+
+            function deleteCurrentPhoto() {
+                showDeletePhotoModal();
+            }
+
+            function confirmDeletePhoto() {
+                document.getElementById('deletePhoto').value = '1';
+                document.getElementById('photo').value = '';
+                document.getElementById('imagePreview').classList.add('hidden');
+                document.querySelector('.mb-4').style.display = 'none';
+                closeDeletePhotoModal();
+            }
+
+            function showDeletePhotoModal() {
+                const modal = document.getElementById('deletePhotoModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            function closeDeletePhotoModal() {
+                const modal = document.getElementById('deletePhotoModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            async function handleRoleChange() {
+                await validateLeaderAvailability();
+            }
+
+            async function handleCompanyChange() {
+                await validateLeaderAvailability();
+            }
+
+            async function validateLeaderAvailability() {
+                const roleSelect = document.getElementById('role');
+                const compIdSelect = document.getElementById('compId');
+                const selectedRole = roleSelect ? roleSelect.value : null;
+                const selectedCompId = compIdSelect ? compIdSelect.value : null;
+                const currentRole = '{{ $data->role->value }}';
+                const currentCompId = '{{ $data->compId }}';
+
+                // Hanya validasi jika:
+                // 1. Role berubah dari bukan admin menjadi admin
+                // 2. Company berubah saat role sudah/akan menjadi admin
+                if (selectedRole === 'admin' && (currentRole !== 'admin' || currentCompId !== selectedCompId)) {
+                    try {
+                        const response = await fetch('{{ route("companies.check-leader") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ compId: selectedCompId })
+                        });
+
+                        const data = await response.json();
+
+                        if (!data.available) {
+                            showLeaderExistsModal();
+                            if (roleSelect) {
+                                roleSelect.value = '{{ $data->role->value }}';
+                            }
+                            if (compIdSelect) {
+                                compIdSelect.value = '{{ $data->compId }}';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error checking leader:', error);
+                    }
+                }
+            }
+
+            function showLeaderExistsModal() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            function closeLeaderExistsModal() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            // Close modal when clicking outside
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            closeLeaderExistsModal();
+                        }
+                    });
+                }
+            });
         </script>
     @endpush
 @endsection

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Teknisi Qan')</title>
+    <title>@yield('title', 'TeknisiQan')</title>
 
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +55,7 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
             <a href="{{ url('/') }}" class="flex items-center space-x-3 text-primary">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center">
-                    <img src="{{ asset('important/Logo.png') }}" alt="Logo Teknisi Qan"
+                    <img src="{{ asset('important/Logo.png') }}" alt="Logo TeknisiQan"
                         class="w-full h-full object-contain">
                 </div>
                 <div>

@@ -78,7 +78,7 @@
     @foreach($units as $unitData)
         <div class="label-container">
             <div class="label-header">
-                <h3>{{ config('app.name', 'Teknisi Qan') }}</h3>
+                <h3>{{ config('app.name', 'TeknisiQan') }}</h3>
                 <p>Unit Label</p>
             </div>
             

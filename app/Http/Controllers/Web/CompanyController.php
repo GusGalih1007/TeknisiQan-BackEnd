@@ -156,4 +156,22 @@ class CompanyController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Check if company already has a leader
+     */
+    public function checkLeader(Request $request)
+    {
+        $compId = $request->input('compId');
+        $company = Company::find($compId);
+
+        if (!$company) {
+            return response()->json(['available' => false], 404);
+        }
+
+        // Return true jika leader belum ada, false jika sudah ada
+        $available = $company->leaderId === null;
+
+        return response()->json(['available' => $available]);
+    }
 }

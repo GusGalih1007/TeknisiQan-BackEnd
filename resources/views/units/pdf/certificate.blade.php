@@ -91,7 +91,7 @@
     <div class="certificate">
         <div class="cert-header">
             <h1>Unit Certificate</h1>
-            <p>{{ config('app.name', 'Teknisi Qan') }}</p>
+            <p>{{ config('app.name', 'TeknisiQan') }}</p>
         </div>
         
         <div class="cert-content">

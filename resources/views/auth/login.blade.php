@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Login klien - Teknisi Qan')
+@section('title', 'Login klien - TeknisiQan')
 
 @section('content')
     <!-- Header Form -->

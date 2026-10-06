@@ -18,7 +18,7 @@ class InitCompanySeeder extends Seeder
 
         $company = Company::create([
             'compId' => null,
-            'name' => 'PT. Teknisi Qan',
+            'name' => 'PT. TeknisiQan',
             'address' => 'Jl. Contoh Alamat No. 123, Jakarta',
             'phone' => '081234567890',
             'email' => 'info@teknisiquan.com'

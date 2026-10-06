@@ -1,16 +1,12 @@
 @extends('layouts.public')
 
-@section('title', 'Lacak Tiket Laporan - Teknisi Qan')
+@section('title', 'Lacak Tiket Laporan - TeknisiQan')
 
 @section('content')
 <div class="min-h-screen bg-surface py-8 sm:py-12">
     <div class="max-w-4xl mx-auto px-4 sm:px-6">
         <!-- Header -->
         <div class="text-center mb-8 sm:mb-12">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/25 border border-secondary/40 text-purple-950 text-xs font-bold uppercase tracking-wider mb-4">
-                <i class="bi bi-search"></i>
-                Lacak Status Laporan
-            </div>
             <h1 class="text-2xl sm:text-4xl font-extrabold text-primary">Cari Status Laporan Anda</h1>
             <p class="text-xs sm:text-sm text-gray-500 mt-2 max-w-xl mx-auto">
                 Masukkan nomor tiket laporan untuk melihat status dan riwayat penanganan.
@@ -20,14 +16,14 @@
         <!-- Search Card -->
         <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 mb-8">
             <form action="{{ route('tickets.search') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
-                <input 
-                    type="text" 
-                    name="ticket" 
+                <input
+                    type="text"
+                    name="ticket"
                     placeholder="Contoh: CMP-26-001"
                     value="{{ request('ticket') }}"
                     class="flex-1 px-4 sm:px-6 py-3 sm:py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     required>
-                <button 
+                <button
                     type="submit"
                     class="px-6 sm:px-8 py-3 sm:py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition duration-200 flex items-center justify-center gap-2 text-sm whitespace-nowrap">
                     <i class="bi bi-search"></i>
@@ -52,12 +48,12 @@
                             <div class="text-right">
                                 @php
                                     $hasResponse = $report->responses()->exists();
-                                    $statusColor = $hasResponse 
-                                        ? ($report->responses()->latest()->first()?->status->value === 'completed' 
-                                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                                    $statusColor = $hasResponse
+                                        ? ($report->responses()->latest()->first()?->status->value === 'completed'
+                                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                                             : 'bg-blue-100 text-blue-800 border-blue-200')
                                         : 'bg-amber-100 text-amber-800 border-amber-200';
-                                    $statusLabel = $hasResponse 
+                                    $statusLabel = $hasResponse
                                         ? ucfirst($report->responses()->latest()->first()?->status->value ?? 'Pending')
                                         : 'Sedang Diajukan';
                                 @endphp

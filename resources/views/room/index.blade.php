@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar Ruangan - Teknisi Qan')
+@section('title', 'Daftar Ruangan - TeknisiQan')
 @section('page-title', 'Daftar Ruangan')
 @section('sidebar-active', 'rooms')
 

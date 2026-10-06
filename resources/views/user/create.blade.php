@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', $pageTitle . ' - Teknisi Qan')
+@section('title', $pageTitle . ' - TeknisiQan')
 @section('page-title', $pageTitle)
 @section('sidebar-active', 'users')
 
@@ -103,8 +103,9 @@
                             <select id="compId" name="compId"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('compId') border-red-500 @enderror"
                                 @if (auth()->user()->role->value == 'admin') disabled @endif
-                                @if (auth()->user()->role->value == 'superadmin') required @endif>
-                                <option value="">-- Pilih Perusahaan --</option>
+                                @if (auth()->user()->role->value == 'superadmin') required @endif
+                                onchange="handleCompanyChange()">
+                                <option value="" selected disabled hidden>-- Pilih Perusahaan --</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->compId }}"
                                         @if (auth()->user()->role->value == 'admin' || old('compId') == $company->compId) selected @endif>
@@ -129,8 +130,8 @@
                             </label>
                             <select id="role" name="role"
                                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition @error('role') border-red-500 @enderror"
-                                required>
-                                <option value="">-- Pilih Role --</option>
+                                required onchange="handleRoleChange()">
+                                <option value="" selected disabled hidden>-- Pilih Role --</option>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->value }}"
                                         @if (old('role') == $role->value) selected @endif>
@@ -196,6 +197,42 @@
         </div>
     </div>
 
+    <!-- Modal: Leader Already Exists -->
+    <div id="leaderExistsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-lg max-w-md w-full mx-4 overflow-hidden animate-in">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                        <i class="bi bi-exclamation-triangle text-amber-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Instansi Sudah Memiliki Admin</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <p class="text-gray-700 font-medium">
+                    Instansi ini sudah memiliki admin/leader. Silahkan pilih yang lain.
+                </p>
+                <p class="text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                    <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                    Anda bisa merubah leader dari instansi tertentu di halaman instansi.
+                </p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button type="button" onclick="closeLeaderExistsModal()"
+                    class="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition">
+                    <i class="bi bi-check-lg mr-2"></i>Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             function previewImage(event) {
@@ -214,6 +251,72 @@
                 document.getElementById('photo').value = '';
                 document.getElementById('imagePreview').classList.add('hidden');
             }
+
+            async function handleRoleChange() {
+                await validateLeaderAvailability();
+            }
+
+            async function handleCompanyChange() {
+                await validateLeaderAvailability();
+            }
+
+            async function validateLeaderAvailability() {
+                const roleSelect = document.getElementById('role');
+                const compIdSelect = document.getElementById('compId');
+                const selectedRole = roleSelect ? roleSelect.value : null;
+                const selectedCompId = compIdSelect ? compIdSelect.value : null;
+
+                // Hanya validasi jika role adalah admin dan company sudah dipilih
+                if (selectedRole === 'admin' && selectedCompId) {
+                    try {
+                        const response = await fetch('{{ route("companies.check-leader") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ compId: selectedCompId })
+                        });
+
+                        const data = await response.json();
+
+                        if (!data.available) {
+                            showLeaderExistsModal();
+                            if (roleSelect) {
+                                roleSelect.value = '';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error checking leader:', error);
+                    }
+                }
+            }
+
+            function showLeaderExistsModal() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            function closeLeaderExistsModal() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            // Close modal when clicking outside
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('leaderExistsModal');
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            closeLeaderExistsModal();
+                        }
+                    });
+                }
+            });
         </script>
     @endpush
 @endsection

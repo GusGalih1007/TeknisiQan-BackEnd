@@ -1,4 +1,4 @@
-<!-- Footer Landing Page Teknisi Qan -->
+<!-- Footer Landing Page TeknisiQan -->
 <footer class="bg-primary text-white py-12 border-t border-white/10">
     <div class="max-w-7xl mx-auto px-6">
         <div class="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -22,7 +22,7 @@
 
             <!-- Copyright -->
             <div class="text-xs text-purple-300 text-center md:text-right">
-                Copyright &copy; 2024 Teknisi Qan. All rights reserved.
+                Copyright &copy; 2024 TeknisiQan. All rights reserved.
             </div>
         </div>
     </div>
