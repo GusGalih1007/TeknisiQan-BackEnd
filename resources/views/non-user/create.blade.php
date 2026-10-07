@@ -119,10 +119,10 @@
             </a>
 
             <div class="flex items-center gap-2 sm:gap-4">
-                <a href="{{ route('tickets.search') }}"
-                    class="text-xs sm:text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center gap-1.5">
+                <button onclick="openSearchModal()"
+                    class="text-xs sm:text-sm font-semibold text-gray-500 hover:text-primary transition flex items-center gap-1.5 cursor-pointer">
                     <span>Lacak Tiket</span>
-                </a>
+                </button>
                 <div class="btn btn-primary">
                     @auth
                     <a href="{{ route('temp.dashboard') }}"
@@ -323,7 +323,7 @@
                 <!-- SEKSI 4: BUKTI FOTO (5 INPUT FILE) -->
                 <div>
                     <div class="flex items-center gap-3 pb-3 border-b border-gray-100 mb-6">
-                        <h2 class="text-lg font-bold text-gray-800">Lampiran Foto Kerusakan (Opsional)</h2>
+                        <h2 class="text-lg font-bold text-gray-800">Lampiran Foto Kerusakan</h2>
                     </div>
 
                     <p class="text-xs text-gray-600 mb-4">Maksimal 5 foto (masing-masing maksimal 5MB)</p>
@@ -396,6 +396,309 @@
         </div>
     </footer>
 
+    <!-- Modal Search Ticket -->
+    <div id="searchTicketModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
+                <h2 class="text-xl sm:text-2xl font-bold text-primary">Lacak Status Tiket</h2>
+                <button onclick="closeSearchModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="bi bi-x-lg text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- Search Input -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Tiket</label>
+                    <div class="flex gap-3">
+                        <input 
+                            type="text" 
+                            id="searchTicketInput"
+                            placeholder="Contoh: CMP-26-001"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                            onkeyup="searchTicketRealtime()">
+                        <button 
+                            onclick="searchTicket()"
+                            class="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition duration-200 text-sm whitespace-nowrap">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="searchLoading" class="hidden text-center py-8">
+                    <div class="inline-block">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                    <p class="text-gray-500 mt-2 text-sm">Mencari tiket...</p>
+                </div>
+
+                <!-- Results Container -->
+                <div id="searchResults" class="space-y-4"></div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-8">
+                    <i class="bi bi-search text-4xl text-gray-300 mb-3 block"></i>
+                    <p class="text-gray-500 text-sm">Masukkan nomor tiket untuk mencari status laporan Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openSearchModal() {
+            document.getElementById('searchTicketModal').classList.remove('hidden');
+            document.getElementById('searchTicketInput').focus();
+        }
+
+        function closeSearchModal() {
+            document.getElementById('searchTicketModal').classList.add('hidden');
+            document.getElementById('searchTicketInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('searchLoading').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('searchTicketModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSearchModal();
+            }
+        });
+
+        // Real-time search on input change
+        function searchTicketRealtime() {
+            const input = document.getElementById('searchTicketInput').value.trim();
+            if (input.length >= 3) {
+                searchTicket();
+            } else if (input.length === 0) {
+                document.getElementById('searchResults').innerHTML = '';
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('searchLoading').classList.add('hidden');
+            }
+        }
+
+        // Search ticket function
+        function searchTicket() {
+            const ticketNumber = document.getElementById('searchTicketInput').value.trim();
+
+            if (!ticketNumber) {
+                alert('Silakan masukkan nomor tiket');
+                return;
+            }
+
+            document.getElementById('searchLoading').classList.remove('hidden');
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('emptyState').classList.add('hidden');
+
+            fetch(`{{ route('api.tickets.search') }}?ticket=${encodeURIComponent(ticketNumber)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('searchLoading').classList.add('hidden');
+
+                    if (data.report) {
+                        displayTicketResult(data.report);
+                        document.getElementById('emptyState').classList.add('hidden');
+                    } else {
+                        document.getElementById('searchResults').innerHTML = `
+                            <div class="text-center py-8">
+                                <i class="bi bi-exclamation-circle text-4xl text-yellow-400 mb-3 block"></i>
+                                <p class="text-gray-700 font-medium">Tiket tidak ditemukan</p>
+                                <p class="text-gray-500 text-sm mt-1">Silakan periksa kembali nomor tiket Anda</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('searchLoading').classList.add('hidden');
+                    console.error('Error:', error);
+                    document.getElementById('searchResults').innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="bi bi-exclamation-triangle text-4xl text-red-400 mb-3 block"></i>
+                            <p class="text-gray-700 font-medium">Terjadi kesalahan</p>
+                            <p class="text-gray-500 text-sm mt-1">Silakan coba lagi</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Display ticket result
+        function displayTicketResult(report) {
+            const hasResponse = report.responses && report.responses.length > 0;
+
+            // Determine status dari latest response
+            let statusBadge = 'Sedang Diajukan';
+            let statusColor = 'bg-amber-100 text-amber-800 border-amber-200';
+            let statusIcon = 'bi-clock-history';
+
+            if (hasResponse) {
+                const latestResponse = report.responses[report.responses.length - 1];
+                const status = latestResponse.status;
+                
+                switch(status) {
+                    case 'processed':
+                        statusBadge = 'Diproses';
+                        statusColor = 'bg-blue-100 text-blue-800 border-blue-200';
+                        statusIcon = 'bi-arrow-repeat';
+                        break;
+                    case 'delayed':
+                        statusBadge = 'Tertunda';
+                        statusColor = 'bg-orange-100 text-orange-800 border-orange-200';
+                        statusIcon = 'bi-exclamation-triangle';
+                        break;
+                    case 'solved':
+                        statusBadge = 'Selesai';
+                        statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                        statusIcon = 'bi-check-circle-fill';
+                        break;
+                    case 'rejected':
+                        statusBadge = 'Ditolak';
+                        statusColor = 'bg-red-100 text-red-800 border-red-200';
+                        statusIcon = 'bi-x-circle-fill';
+                        break;
+                }
+            }
+
+            // Build photos section
+            let photosHTML = '';
+            console.log('Report photo data:', report.photo);
+            if (report.photo && Array.isArray(report.photo) && report.photo.length > 0) {
+                photosHTML = `
+                    <div class="mb-4 border-t border-gray-200 pt-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Foto Kerusakan</p>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            ${report.photo.map((photo) => `
+                                <a href="/storage/${photo}" target="_blank" class="aspect-square rounded overflow-hidden border border-gray-200 hover:shadow-md transition group">
+                                    <img src="/storage/${photo}" alt="Foto Kerusakan" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'">
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let responsesHTML = '';
+            if (hasResponse) {
+                responsesHTML = `
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="font-bold text-gray-800 text-sm mb-3">Riwayat Penanganan</h4>
+                        <div class="space-y-3">
+                            ${report.responses.map((response) => {
+                                let responsePhotosHTML = '';
+                                console.log('Response photo data:', response.photo);
+                                if (response.photo && Array.isArray(response.photo) && response.photo.length > 0) {
+                                    responsePhotosHTML = `
+                                        <div class="grid grid-cols-4 gap-1.5 mt-2">
+                                            ${response.photo.map((photo) => `
+                                                <a href="/storage/${photo}" target="_blank" class="aspect-square rounded overflow-hidden border border-gray-200 hover:shadow-md transition group">
+                                                    <img src="/storage/${photo}" alt="Foto Respons" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'">
+                                                </a>
+                                            `).join('')}
+                                        </div>
+                                    `;
+                                }
+                                return `
+                                    <div class="border-l-4 border-primary bg-gray-50 p-3 rounded">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <p class="font-semibold text-gray-800 text-sm">${response.technician?.name || 'Teknisi'}</p>
+                                            <span class="text-xs text-gray-500">${new Date(response.responseDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })} ${new Date(response.responseDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">${response.solution || '-'}</p>
+                                        ${responsePhotosHTML}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const reportDate = new Date(report.reportDate);
+            const resultsHTML = `
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-primary/5 to-tertiary/5 border-b border-gray-200 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Nomor Tiket</p>
+                                <h3 class="text-xl sm:text-2xl font-bold text-primary">${report.ticketNumber}</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 ${statusColor} border px-3 py-1.5 rounded-lg font-semibold text-xs whitespace-nowrap">
+                                <i class="bi ${statusIcon}"></i>
+                                ${statusBadge}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-4">
+                        <!-- Info Grid -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tanggal Laporan</p>
+                                <p class="text-sm font-medium text-gray-800">${reportDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Perusahaan</p>
+                                <p class="text-sm font-medium text-gray-800">${report.company?.name || '-'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Item Info -->
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Unit / Barang</p>
+                                <p class="text-sm font-medium text-gray-800">${report.unit?.unitName || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ruangan</p>
+                                <p class="text-sm font-medium text-gray-800">${report.unit?.room?.roomName || '-'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Judul Laporan</p>
+                            <p class="text-sm font-medium text-gray-800">${report.title || '-'}</p>
+                        </div>
+
+                        <!-- Problem Description -->
+                        <div class="mb-4">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Deskripsi Kerusakan</p>
+                            <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">${report.problem || '-'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Photos -->
+                        ${photosHTML}
+
+                        <!-- Reporter Info -->
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Data Pelapor</p>
+                            <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                <p class="text-sm text-gray-800"><span class="font-semibold">Nama:</span> ${report.reportBy?.name || '-'}</p>
+                            </div>
+                        </div>
+
+                        ${responsesHTML}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('searchResults').innerHTML = resultsHTML;
+        }
+
+        // Allow Enter key to search
+        document.getElementById('searchTicketInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchTicket();
+            }
+        });
+    </script>
 
 
 </body>

@@ -18,8 +18,8 @@ Route::get('/', function () {
 Route::get('/lapor', [ReportController::class, 'create'])->name('non-user-reports.create');
 Route::post('/lapor', [ReportController::class, 'store'])->name('non-user-reports.store');
 
-// Halaman Lacak Tiket (Publik)
-Route::get('/track', [TicketController::class, 'search'])->name('tickets.search');
+// API: Lacak Tiket (Publik)
+Route::get('/api/search-ticket', [TicketController::class, 'apiSearch'])->name('api.tickets.search');
 
 Route::prefix('auth')->group(function () {
     Route::get('login', [AuthController::class, 'loginPage'])->name('login');

@@ -9,19 +9,24 @@ use Illuminate\Http\Request;
 class TicketController extends Controller
 {
     /**
-     * Search for a ticket by ticket number
+     * API: Search for a ticket by ticket number (returns JSON)
      */
-    public function search(Request $request)
+    public function apiSearch(Request $request)
     {
         $ticketNumber = $request->input('ticket');
-        $report = null;
 
-        if ($ticketNumber) {
-            $report = Report::with('company', 'unit', 'unit.room', 'responses.technician')
-                ->where('ticketNumber', $ticketNumber)
-                ->first();
+        if (!$ticketNumber) {
+            return response()->json(['report' => null, 'message' => 'Masukkan nomor tiket'], 400);
         }
 
-        return view('tickets.search', compact('report'));
+        $report = Report::with('company', 'unit', 'unit.room', 'responses.technician')
+            ->where('ticketNumber', $ticketNumber)
+            ->first();
+
+        if (!$report) {
+            return response()->json(['report' => null, 'message' => 'Tiket tidak ditemukan'], 404);
+        }
+
+        return response()->json(['report' => $report, 'message' => 'Tiket ditemukan']);
     }
 }
