@@ -6,178 +6,170 @@
 
 @section('content')
     <!-- Header & Search Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-            <div class="flex-1">
-                <!-- Search Bar -->
-                <form method="GET" action="{{ route('companies.index') }}" class="flex gap-2">
-                    <div class="flex-1 relative">
-                        <input type="text" name="search" placeholder="Cari nama atau alamat instansi..."
-                            value="{{ request('search') }}"
-                            class="w-full pl-4 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition">
-                    </div>
-                    <button type="submit"
-                        class="bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary-dark transition">
-                        Cari
-                    </button>
-                </form>
-            </div>
-
-            @if (auth()->user()->role->value == 'superadmin')
-                <a href="{{ route('companies.create') }}"
-                    class="bg-secondary text-primary font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-secondary-dark transition duration-200 flex items-center justify-center space-x-2 text-sm w-full sm:w-auto whitespace-nowrap">
-                    <i class="bi bi-plus-lg text-base"></i>
-                    <span>Tambah Instansi Baru</span>
-                </a>
-            @endif
-        </div>
-    </div>
-
-    <!-- Companies Grid -->
-    @if ($data->count() > 0)
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach ($data as $company)
-                <div
-                    class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden group">
-                    <!-- Logo Section -->
-                    <div
-                        class="relative h-32 bg-gradient-to-br from-primary/10 to-tertiary/10 flex items-center justify-center overflow-hidden">
-                        @if ($company->logo && file_exists(public_path('storage/' . $company->logo)))
-                            <img src="{{ asset('storage/' . $company->logo) }}" alt="{{ $company->name }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        @else
-                            <div class="text-4xl font-bold text-primary/20">
-                                {{ strtoupper(substr($company->name, 0, 1)) }}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Header & Search Section -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+                    <!-- Search Bar -->
+                    <div class="flex-1">
+                        <form method="GET" action="{{ route('companies.index') }}" class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <input type="text" name="search" placeholder="Cari nama atau alamat instansi..."
+                                    value="{{ request('search') }}"
+                                    class="w-full pl-4 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition">
                             </div>
-                        @endif
+                            <button type="submit"
+                                class="bg-primary text-white px-6 py-2.5 rounded-xl font-medium hover:bg-primary-dark transition">
+                                Cari
+                            </button>
+                        </form>
                     </div>
 
-                    <!-- Content Section -->
-                    <div class="p-5 flex flex-col h-full">
-                        <!-- Company Name -->
-                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">{{ $company->name }}</h3>
-
-                        <!-- Address -->
-                        <button type="button" onclick="openDetailModal('{{ $company->name }}', '{{ $company->address }}')"
-                            class="text-xs text-gray-500 mb-3 flex items-center gap-2 hover:text-primary transition cursor-pointer group w-full">
-                            <i class="bi bi-geo-alt-fill text-primary flex-shrink-0"></i>
-                            <span class="truncate group-hover:underline">{{ $company->address }}</span>
-                        </button>
-
-                        <!-- Leader Info -->
-                        <div class="mb-4 pb-4 border-b border-gray-100">
-                            <p class="text-xs font-semibold text-gray-600 mb-2">Pemimpin Instansi:</p>
-                            @if ($company->leader)
-                                <button type="button"
-                                    onclick="openDetailModal('{{ addslashes($company->leader->name) }}', '{{ addslashes($company->leader->email) }}')"
-                                    class="flex items-center gap-2 hover:bg-gray-50 p-1 rounded transition cursor-pointer w-full">
-                                    @if ($company->leader->photo)
-                                        <div
-                                            class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
-                                            <img src="{{ asset('storage/' . $company->leader->photo) }}"
-                                                alt="{{ $company->leader->name }}"
-                                                class="w-full h-full object-cover rounded-full">
-                                        </div>
-                                    @else
-                                        <div
-                                            class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
-                                            {{ strtoupper(substr($company->leader->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0 text-left">
-                                        <p class="text-xs font-semibold text-gray-800 truncate hover:underline">
-                                            {{ $company->leader->name }}</p>
-                                        <p class="text-xs text-gray-500 truncate hover:underline">
-                                            {{ $company->leader->email }}</p>
-                                    </div>
-                                </button>
-                            @else
-                                <div class="flex items-center gap-2">
-                                    <div
-                                        class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">
-                                        <i class="bi bi-person-slash text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-gray-500">Belum ditentukan</p>
-                                        <p class="text-xs text-gray-400">—</p>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Stats -->
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div class="bg-blue-50 rounded-lg p-2">
-                                <p class="text-xs text-blue-600 font-semibold">Total Users</p>
-                                <p class="text-lg font-bold text-blue-800">{{ $company->companyUsers->count() ?? 0 }}</p>
-                            </div>
-                            <div class="bg-emerald-50 rounded-lg p-2">
-                                <p class="text-xs text-emerald-600 font-semibold">Ruangan</p>
-                                <p class="text-lg font-bold text-emerald-800">{{ $company->companyRooms->count() ?? 0 }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex gap-2">
-                            @if (auth()->user()->role->value == 'superadmin')
-                                <a href="{{ route('companies.edit', $company->compId) }}"
-                                    class="flex-1 text-center bg-primary/10 text-primary hover:bg-primary/20 font-semibold py-2 rounded-lg transition text-sm">
-                                    <i class="bi bi-pencil mr-1"></i>Edit
-                                </a>
-                                <button type="button"
-                                    onclick="openDeleteModal('{{ $company->compId }}', '{{ $company->name }}', 'company')"
-                                    class="flex-1 bg-red-50 text-red-600 hover:bg-red-100 font-semibold py-2 rounded-lg transition text-sm">
-                                    <i class="bi bi-trash mr-1"></i>Hapus
-                                </button>
-                            @else
-                                <a href="{{ route('companies.show', $company->compId) }}"
-                                    class="flex-1 text-center bg-primary text-white hover:bg-primary-dark font-semibold py-2 rounded-lg transition text-sm">
-                                    <i class="bi bi-eye mr-1"></i>Lihat
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Pagination -->
-        <div class="mt-8 flex justify-center">
-            {{ $data->links('pagination::simple-tailwind') }}
-        </div>
-    @else
-        <!-- Empty State -->
-        <div class="text-center py-12">
-            <div class="inline-block">
-                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 mx-auto">
-                    <i class="bi bi-building text-3xl text-gray-400"></i>
-                </div>
-                <p class="text-gray-500 font-medium">Tidak ada instansi ditemukan</p>
                 @if (auth()->user()->role->value == 'superadmin')
-                    <p class="text-gray-400 text-sm mt-2">Mulai dengan membuat instansi baru</p>
                     <a href="{{ route('companies.create') }}"
-                        class="inline-block mt-4 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-dark transition">
-                        <i class="bi bi-plus-lg mr-1"></i>Tambah Instansi Baru
+                        class="bg-secondary text-primary font-bold px-5 py-2.5 rounded-xl shadow-md hover:bg-secondary-dark transition duration-200 flex items-center justify-center space-x-2 text-sm w-full sm:w-auto">
+                        <i class="bi bi-plus-lg text-base"></i>
+                        <span>Tambah Instansi Baru</span>
                     </a>
                 @endif
             </div>
         </div>
-    @endif
+
+        <!-- Datatable -->
+        @if ($data->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-50/80 text-gray-500 text-xs uppercase tracking-wider font-semibold">
+                            <th class="px-6 py-4">No</th>
+                            <th class="px-6 py-4">Nama Instansi</th>
+                            <th class="px-6 py-4">Alamat</th>
+                            <th class="px-6 py-4">Pemimpin</th>
+                            <th class="px-6 py-4">Total Users</th>
+                            <th class="px-6 py-4">Ruangan</th>
+                            <th class="px-6 py-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($data as $index => $company)
+                            <tr class="hover:bg-gray-50/60 transition">
+                                <td class="px-6 py-4 font-semibold text-gray-600">
+                                    {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-800">{{ $company->name }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">
+                                    <button type="button" 
+                                        onclick="openDetailModal('Alamat Lengkap', '{{ addslashes($company->address) }}')"
+                                        class="text-primary hover:underline">
+                                        {{ Str::limit($company->address, 40) }}
+                                    </button>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($company->leader)
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs flex-shrink-0 overflow-hidden">
+                                                @if ($company->leader->photo && file_exists(public_path('storage/' . $company->leader->photo)))
+                                                    <img src="{{ asset('storage/' . $company->leader->photo) }}" alt="{{ $company->leader->name }}" class="w-full h-full object-cover">
+                                                @else
+                                                    {{ strtoupper(substr($company->leader->name, 0, 1)) }}
+                                                @endif
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-semibold text-gray-800 truncate">{{ $company->leader->name }}</p>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-xs">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">
+                                        {{ $company->companyUsers->count() ?? 0 }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">
+                                        {{ $company->companyRooms->count() ?? 0 }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        @if (auth()->user()->role->value == 'superadmin')
+                                            <a href="{{ route('companies.edit', $company->compId) }}"
+                                                class="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                                title="Edit Instansi">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button"
+                                                class="text-red-600 hover:text-red-800 font-bold text-xs bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
+                                                title="Hapus Instansi"
+                                                onclick="openDeleteModal('{{ $company->compId }}', '{{ addslashes($company->name) }}', 'company')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        @else
+                                            <a href="{{ route('companies.show', $company->compId) }}"
+                                                class="text-primary hover:text-primary-dark font-bold text-xs bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition"
+                                                title="Lihat Detail">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-3">
+                                        <i class="bi bi-inbox text-3xl text-gray-300"></i>
+                                        <p class="text-gray-500 font-medium">Tidak ada data instansi ditemukan</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <div class="text-xs text-gray-500">
+                    Menampilkan <span class="font-semibold text-gray-700">{{ $data->count() }}</span> dari <span
+                        class="font-semibold text-gray-700">{{ $data->total() }}</span> total instansi
+                </div>
+                <div class="flex gap-2">
+                    {{ $data->links('pagination::simple-tailwind') }}
+                </div>
+            </div>
+        @else
+            <!-- Empty State -->
+            <div class="px-6 py-12 text-center">
+                <div class="inline-block">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 mx-auto">
+                        <i class="bi bi-building text-3xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 font-medium">Tidak ada instansi ditemukan</p>
+                    @if (auth()->user()->role->value == 'superadmin')
+                        <p class="text-gray-400 text-sm mt-2">Mulai dengan membuat instansi baru</p>
+                        <a href="{{ route('companies.create') }}"
+                            class="inline-block mt-4 bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-dark transition">
+                            <i class="bi bi-plus-lg mr-1"></i>Tambah Instansi Baru
+                        </a>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
 @endsection
 
 @push('scripts')
     <!-- Detail Modal -->
-    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" data-modal="detail">
         <div class="bg-white rounded-2xl shadow-lg max-w-md w-full animate-scale-in">
             <!-- Modal Header -->
             <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-gray-800" id="detailTitle">Detail</h3>
-                    <button type="button" onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
+                <h3 class="text-lg font-bold text-gray-800" id="detailTitle">Detail</h3>
             </div>
 
             <!-- Modal Body -->
@@ -197,7 +189,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" data-modal="delete">
         <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full animate-scale-in">
             <!-- Modal Header -->
             <div class="p-6 border-b border-gray-200">
@@ -326,7 +318,7 @@
             }
         });
 
-        // Close modals when clicking outside
+        // Close modals when clicking outside (backdrop)
         document.getElementById('detailModal')?.addEventListener('click', function(event) {
             if (event.target === this) {
                 closeDetailModal();

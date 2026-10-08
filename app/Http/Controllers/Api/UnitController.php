@@ -56,4 +56,22 @@ class UnitController extends Controller
 
         return response()->json($data, 200);
     }
+
+    /**
+     * Get units by room
+     */
+    public function unitsByRoom(string $roomId)
+    {
+        $user = auth()->user();
+        
+        $units = Unit::with('room', 'company')
+            ->where('roomId', $roomId)
+            ->when($user && $user->role->value !== 'superadmin', fn ($query) => $query->where('compId', $user->compId))
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'units' => $units
+        ], 200);
+    }
 }

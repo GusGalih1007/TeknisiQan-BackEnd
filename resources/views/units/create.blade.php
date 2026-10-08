@@ -2,7 +2,7 @@
 
 @section('title', 'Tambah Unit - TeknisiQan')
 @section('page-title', 'Tambah Unit Baru')
-@section('sidebar-active', 'units')
+@section('sidebar-active', 'rooms')
 
 @section('content')
     <div class="max-w-2xl mx-auto">

@@ -56,16 +56,6 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition"
                                     onclick="openUserDetailModal('{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->phone ?? '-' }}', '{{ $user->userId }}', '{{ $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=5003C0&color=fff&bold=true' }}')">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-tertiary flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
-                                        @if ($user->photo && file_exists(public_path('storage/' . $user->photo)))
-                                            <img src="{{ asset('storage/' . $user->photo) }}" alt="{{ $user->name }}"
-                                                class="w-full h-full object-cover rounded-full">
-                                        @else
-                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name ?? 'User') }}&background=5003C0&color=fff&bold=true"
-                                                alt="{{ $user->name }}" class="w-full h-full object-cover rounded-full">
-                                        @endif
-                                    </div>
                                     <div>
                                         <p class="font-semibold text-gray-800 hover:underline">{{ $user->name }}</p>
                                     </div>
@@ -165,17 +155,11 @@
 
 @push('scripts')
     <!-- User Detail Modal -->
-    <div id="userDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div id="userDetailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" data-modal="userDetail">
         <div class="bg-white rounded-2xl shadow-lg max-w-md w-full animate-scale-in max-h-[90vh] overflow-y-auto">
             <!-- Modal Header -->
             <div class="p-6 border-b border-gray-200 sticky top-0 bg-white">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-gray-800">Detail User</h3>
-                    <button type="button" onclick="closeUserDetailModal()"
-                        class="text-gray-400 hover:text-gray-600 text-xl transition">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
+                <h3 class="text-lg font-bold text-gray-800">Detail User</h3>
             </div>
 
             <!-- Modal Body -->
@@ -223,7 +207,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" data-modal="delete">
         <div class="bg-white rounded-2xl shadow-lg max-w-sm w-full animate-scale-in">
             <!-- Modal Header -->
             <div class="p-6 border-b border-gray-200">

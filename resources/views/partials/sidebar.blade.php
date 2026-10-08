@@ -73,11 +73,11 @@
             <span>Daftar Ruangan</span>
         </a>
 
-        <a href="{{ Route::has('units.index') ? route('units.index') : url('/units') }}"
+        {{-- <a href="{{ Route::has('units.index') ? route('units.index') : url('/units') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition {{ $activeMenu === 'units' ? 'bg-secondary text-primary font-bold shadow-md shadow-secondary/20' : 'text-gray-700 hover:bg-gray-100 hover:text-black' }}">
             <i
                 class="bi bi-collection text-lg {{ $activeMenu === 'units' ? 'text-primary' : 'text-black' }}"></i>
             <span>Daftar Unit</span>
-        </a>
+        </a> --}}
     </nav>
 </aside>

@@ -15,3 +15,4 @@ Route::post('company/store', [CompanyController::class, 'store']);
 // Unit API routes
 Route::get('units/{id}', [UnitController::class, 'show']);
 Route::get('companies/{compId}/units', [UnitController::class, 'unitsByCompany']);
+Route::get('rooms/{roomId}/units', [UnitController::class, 'unitsByRoom']);
